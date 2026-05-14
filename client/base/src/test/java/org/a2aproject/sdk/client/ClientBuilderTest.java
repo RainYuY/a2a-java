@@ -2,7 +2,12 @@ package org.a2aproject.sdk.client;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.concurrent.atomic.AtomicReference;
 
+import org.a2aproject.sdk.client.config.AgentInterfaceSelectionContext;
+import org.a2aproject.sdk.client.config.AgentInterfaceSelectionStrategies;
+import org.a2aproject.sdk.client.config.AgentInterfaceSelectionStrategy;
+import org.a2aproject.sdk.client.config.AgentInterfaceSelector;
 import org.a2aproject.sdk.client.config.ClientConfig;
 import org.a2aproject.sdk.client.http.A2AHttpClientFactory;
 import org.a2aproject.sdk.client.transport.grpc.GrpcTransport;
@@ -15,6 +20,9 @@ import org.a2aproject.sdk.spec.AgentCapabilities;
 import org.a2aproject.sdk.spec.AgentCard;
 import org.a2aproject.sdk.spec.AgentInterface;
 import org.a2aproject.sdk.spec.AgentSkill;
+import org.a2aproject.sdk.spec.Message;
+import org.a2aproject.sdk.spec.MessageSendParams;
+import org.a2aproject.sdk.spec.TextPart;
 import org.a2aproject.sdk.spec.TransportProtocol;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
@@ -53,6 +61,15 @@ public class ClientBuilderTest {
     private final AgentCard cardWithMultipleInterfaces = buildCard(List.of(
             new AgentInterface(TransportProtocol.GRPC.asString(), "http://localhost:9998", "/grpc-tenant", "1.0"),
             new AgentInterface(TransportProtocol.JSONRPC.asString(), "http://localhost:9999", "/jsonrpc-tenant", "1.0")));
+
+    private final AgentCard cardWithMultipleJsonRpcNodes = buildCard(List.of(
+            new AgentInterface(TransportProtocol.JSONRPC.asString(), "http://node-1.example.com", "/node-1", "1.0"),
+            new AgentInterface(TransportProtocol.JSONRPC.asString(), "http://node-2.example.com", "/node-2", "1.0")));
+
+    private final AgentCard cardWithMixedProtocolsAndMultipleGrpcNodes = buildCard(List.of(
+            new AgentInterface(TransportProtocol.GRPC.asString(), "grpc-node-1.example.com", "/grpc-node-1", "1.0"),
+            new AgentInterface(TransportProtocol.JSONRPC.asString(), "http://jsonrpc-node.example.com", "/jsonrpc-node", "1.0"),
+            new AgentInterface(TransportProtocol.GRPC.asString(), "grpc-node-2.example.com", "/grpc-node-2", "1.0")));
 
     @Test
     public void shouldNotFindCompatibleTransport() throws A2AClientException {
@@ -163,6 +180,100 @@ public class ClientBuilderTest {
     }
 
     @Test
+    public void shouldSelectFirstCompatibleNodeByDefault() throws A2AClientException {
+        ClientBuilder builder = Client
+                .builder(cardWithMultipleJsonRpcNodes)
+                .withTransport(JSONRPCTransport.class, new JSONRPCTransportConfigBuilder());
+
+        AgentInterface selectedInterface = builder.findBestClientTransport();
+
+        Assertions.assertEquals("http://node-1.example.com", selectedInterface.url());
+        Assertions.assertEquals("/node-1", selectedInterface.tenant());
+    }
+
+    @Test
+    public void shouldRandomSelectCompatibleNode() throws A2AClientException {
+        ClientBuilder builder = Client
+                .builder(cardWithMultipleJsonRpcNodes)
+                .clientConfig(new ClientConfig.Builder()
+                        .setAgentInterfaceSelectionStrategy(AgentInterfaceSelectionStrategies.RANDOM)
+                        .build())
+                .withTransport(JSONRPCTransport.class, new JSONRPCTransportConfigBuilder());
+        List<String> candidateUrls = List.of("http://node-1.example.com", "http://node-2.example.com");
+
+        for (int i = 0; i < 20; i++) {
+            Assertions.assertTrue(candidateUrls.contains(builder.findBestClientTransport().url()));
+        }
+    }
+
+    @Test
+    public void shouldStickySelectSameNodeForSameTaskOrContext() throws A2AClientException {
+        ClientBuilder builder = Client
+                .builder(cardWithMultipleJsonRpcNodes)
+                .clientConfig(new ClientConfig.Builder()
+                        .setAgentInterfaceSelectionStrategy(AgentInterfaceSelectionStrategies.STICKY)
+                        .build())
+                .withTransport(JSONRPCTransport.class, new JSONRPCTransportConfigBuilder());
+        MessageSendParams request = messageSendParams("context-1", "task-1");
+
+        AgentInterface firstSelection = builder.findBestClientTransport(request);
+        AgentInterface secondSelection = builder.findBestClientTransport(request);
+
+        Assertions.assertEquals(firstSelection, secondSelection);
+    }
+
+    @Test
+    public void shouldUseCustomSelector() throws A2AClientException {
+        AtomicReference<AgentInterfaceSelectionContext> selectionContext = new AtomicReference<>();
+        ClientBuilder builder = Client
+                .builder(cardWithMultipleJsonRpcNodes)
+                .clientConfig(new ClientConfig.Builder()
+                        .setAgentInterfaceSelector(context -> {
+                            selectionContext.set(context);
+                            return context.candidateInterfaces().get(1);
+                        })
+                        .build())
+                .withTransport(JSONRPCTransport.class, new JSONRPCTransportConfigBuilder());
+
+        AgentInterface selectedInterface = builder.findBestClientTransport(messageSendParams("custom-context", ""));
+
+        Assertions.assertEquals("http://node-2.example.com", selectedInterface.url());
+        Assertions.assertNotNull(selectionContext.get());
+        Assertions.assertEquals("custom-context", selectionContext.get().affinityKey());
+        Assertions.assertEquals(2, selectionContext.get().candidateInterfaces().size());
+    }
+
+    @Test
+    public void shouldSelectNodesOnlyWithinNegotiatedProtocol() throws A2AClientException {
+        ClientBuilder builder = Client
+                .builder(cardWithMixedProtocolsAndMultipleGrpcNodes)
+                .clientConfig(new ClientConfig.Builder()
+                        .setAgentInterfaceSelectionStrategy(AgentInterfaceSelectionStrategies.RANDOM)
+                        .build())
+                .withTransport(GrpcTransport.class, new GrpcTransportConfigBuilder().channelFactory(s -> null))
+                .withTransport(JSONRPCTransport.class, new JSONRPCTransportConfigBuilder());
+        List<String> grpcUrls = List.of("grpc-node-1.example.com", "grpc-node-2.example.com");
+
+        for (int i = 0; i < 20; i++) {
+            Assertions.assertTrue(grpcUrls.contains(builder.findBestClientTransport().url()));
+        }
+    }
+
+    @Test
+    public void shouldLoadSelectionStrategyFromServiceLoader() throws A2AClientException {
+        ClientBuilder builder = Client
+                .builder(cardWithMultipleJsonRpcNodes)
+                .clientConfig(new ClientConfig.Builder()
+                        .setAgentInterfaceSelectionStrategy(LastCompatibleSelectionStrategy.NAME)
+                        .build())
+                .withTransport(JSONRPCTransport.class, new JSONRPCTransportConfigBuilder());
+
+        AgentInterface selectedInterface = builder.findBestClientTransport();
+
+        Assertions.assertEquals("http://node-2.example.com", selectedInterface.url());
+    }
+
+    @Test
     public void shouldPreserveEmptyTenant() throws A2AClientException {
         ClientBuilder builder = Client
                 .builder(card)
@@ -171,5 +282,30 @@ public class ClientBuilderTest {
         AgentInterface selectedInterface = builder.findBestClientTransport();
 
         Assertions.assertEquals("", selectedInterface.tenant());
+    }
+
+    private static MessageSendParams messageSendParams(String contextId, String taskId) {
+        return MessageSendParams.builder()
+                .message(Message.builder()
+                        .role(Message.Role.ROLE_USER)
+                        .parts(new TextPart("hello"))
+                        .contextId(contextId)
+                        .taskId(taskId)
+                        .build())
+                .build();
+    }
+
+    public static final class LastCompatibleSelectionStrategy implements AgentInterfaceSelectionStrategy {
+        static final String NAME = "test-last-compatible";
+
+        @Override
+        public String getName() {
+            return NAME;
+        }
+
+        @Override
+        public AgentInterfaceSelector createSelector() {
+            return context -> context.candidateInterfaces().get(context.candidateInterfaces().size() - 1);
+        }
     }
 }

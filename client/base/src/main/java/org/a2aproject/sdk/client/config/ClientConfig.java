@@ -20,6 +20,7 @@ import org.jspecify.annotations.Nullable;
  *   <li><b>Streaming:</b> Enable/disable real-time event streaming (default: true)</li>
  *   <li><b>Polling:</b> Use polling instead of blocking for updates (default: false)</li>
  *   <li><b>Transport preference:</b> Client vs server transport priority (default: server preference)</li>
+ *   <li><b>Interface selection:</b> Node selection among compatible interfaces (default: first compatible)</li>
  *   <li><b>Output modes:</b> Acceptable content types (text, audio, image, etc.)</li>
  *   <li><b>History length:</b> Number of previous messages to include as context</li>
  *   <li><b>Push notifications:</b> Default webhook configuration for task updates</li>
@@ -59,6 +60,22 @@ import org.jspecify.annotations.Nullable;
  *     .build();
  * // With useClientPreference=true, tries gRPC first, then JSON-RPC
  * // With useClientPreference=false, uses server's order from AgentCard
+ * }</pre>
+ * <p>
+ * <b>Interface selection:</b> Controls which endpoint is selected when the chosen transport
+ * protocol has multiple compatible {@link org.a2aproject.sdk.spec.AgentInterface} entries:
+ * <pre>{@code
+ * ClientConfig config = new ClientConfig.Builder()
+ *     .setAgentInterfaceSelectionStrategy(AgentInterfaceSelectionStrategies.RANDOM)
+ *     .build();
+ *
+ * ClientConfig sticky = new ClientConfig.Builder()
+ *     .setAgentInterfaceSelectionStrategy(AgentInterfaceSelectionStrategies.STICKY)
+ *     .build();
+ *
+ * ClientConfig custom = new ClientConfig.Builder()
+ *     .setAgentInterfaceSelector(context -> context.candidateInterfaces().get(0))
+ *     .build();
  * }</pre>
  * <p>
  * <b>Output modes:</b> Specify which content types the client can handle:
@@ -124,6 +141,7 @@ import org.jspecify.annotations.Nullable;
  *   <li>streaming: {@code true}</li>
  *   <li>polling: {@code false}</li>
  *   <li>useClientPreference: {@code false} (server preference)</li>
+ *   <li>agentInterfaceSelectionStrategy: {@link AgentInterfaceSelectionStrategies#FIRST_COMPATIBLE}</li>
  *   <li>acceptedOutputModes: empty list (accept all)</li>
  *   <li>historyLength: {@code null} (no history)</li>
  *   <li>taskPushNotificationConfig: {@code null} (no push notifications)</li>
@@ -142,6 +160,8 @@ public class ClientConfig {
     private final Boolean streaming;
     private final Boolean polling;
     private final Boolean useClientPreference;
+    private final String agentInterfaceSelectionStrategy;
+    private final @Nullable AgentInterfaceSelector agentInterfaceSelector;
     private final List<String> acceptedOutputModes;
     private final @Nullable TaskPushNotificationConfig taskPushNotificationConfig;
     private final @Nullable Integer historyLength;
@@ -151,6 +171,19 @@ public class ClientConfig {
         this.streaming = builder.streaming == null ? true : builder.streaming;
         this.polling = builder.polling == null ? false : builder.polling;
         this.useClientPreference = builder.useClientPreference == null ? false : builder.useClientPreference;
+        this.agentInterfaceSelectionStrategy = builder.agentInterfaceSelectionStrategy == null
+                ? (builder.agentInterfaceSelector == null
+                        ? AgentInterfaceSelectionStrategies.FIRST_COMPATIBLE
+                        : AgentInterfaceSelectionStrategies.CUSTOM)
+                : builder.agentInterfaceSelectionStrategy;
+        this.agentInterfaceSelector = builder.agentInterfaceSelector;
+        if (this.agentInterfaceSelectionStrategy.isBlank()) {
+            throw new IllegalArgumentException("agentInterfaceSelectionStrategy cannot be blank");
+        }
+        if (AgentInterfaceSelectionStrategies.CUSTOM.equals(this.agentInterfaceSelectionStrategy)
+                && this.agentInterfaceSelector == null) {
+            throw new IllegalArgumentException("Custom agent interface selection requires an AgentInterfaceSelector");
+        }
         this.acceptedOutputModes = builder.acceptedOutputModes;
         this.taskPushNotificationConfig = builder.taskPushNotificationConfig;
         this.historyLength = builder.historyLength;
@@ -196,6 +229,28 @@ public class ClientConfig {
      */
     public boolean isUseClientPreference() {
         return useClientPreference;
+    }
+
+    /**
+     * Get the interface selection strategy name.
+     * <p>
+     * This strategy is applied after transport protocol negotiation has determined the
+     * compatible protocol. The name is resolved against implementations discovered through
+     * {@link java.util.ServiceLoader}.
+     *
+     * @return the interface selection strategy name
+     */
+    public String getAgentInterfaceSelectionStrategy() {
+        return agentInterfaceSelectionStrategy;
+    }
+
+    /**
+     * Get the custom interface selector.
+     *
+     * @return the custom selector, or {@code null} unless the custom strategy is configured
+     */
+    public @Nullable AgentInterfaceSelector getAgentInterfaceSelector() {
+        return agentInterfaceSelector;
     }
 
     /**
@@ -278,6 +333,8 @@ public class ClientConfig {
         private @Nullable Boolean streaming;
         private @Nullable Boolean polling;
         private @Nullable Boolean useClientPreference;
+        private @Nullable String agentInterfaceSelectionStrategy;
+        private @Nullable AgentInterfaceSelector agentInterfaceSelector;
         private List<String> acceptedOutputModes = new ArrayList<>();
         private @Nullable TaskPushNotificationConfig taskPushNotificationConfig;
         private @Nullable Integer historyLength;
@@ -323,6 +380,40 @@ public class ClientConfig {
          */
         public Builder setUseClientPreference(@Nullable Boolean useClientPreference) {
             this.useClientPreference = useClientPreference;
+            return this;
+        }
+
+        /**
+         * Set the strategy used to select among compatible agent interfaces.
+         * <p>
+         * The default is {@link AgentInterfaceSelectionStrategies#FIRST_COMPATIBLE}. Built-in
+         * names are defined in {@link AgentInterfaceSelectionStrategies}. Custom strategy
+         * implementations are discovered through {@link java.util.ServiceLoader}; pass the
+         * implementation's {@link AgentInterfaceSelectionStrategy#getName()} value here.
+         *
+         * @param agentInterfaceSelectionStrategy the selection strategy name, or {@code null} for default
+         * @return this builder for method chaining
+         */
+        public Builder setAgentInterfaceSelectionStrategy(@Nullable String agentInterfaceSelectionStrategy) {
+            this.agentInterfaceSelectionStrategy = agentInterfaceSelectionStrategy;
+            this.agentInterfaceSelector = null;
+            return this;
+        }
+
+        /**
+         * Set a custom selector for compatible agent interfaces.
+         * <p>
+         * Passing a non-null selector automatically uses
+         * {@link AgentInterfaceSelectionStrategies#CUSTOM}.
+         *
+         * @param agentInterfaceSelector the custom selector
+         * @return this builder for method chaining
+         */
+        public Builder setAgentInterfaceSelector(@Nullable AgentInterfaceSelector agentInterfaceSelector) {
+            this.agentInterfaceSelector = agentInterfaceSelector;
+            if (agentInterfaceSelector != null) {
+                this.agentInterfaceSelectionStrategy = AgentInterfaceSelectionStrategies.CUSTOM;
+            }
             return this;
         }
 
@@ -396,6 +487,7 @@ public class ClientConfig {
          *   <li>streaming: {@code true}</li>
          *   <li>polling: {@code false}</li>
          *   <li>useClientPreference: {@code false}</li>
+         *   <li>agentInterfaceSelectionStrategy: {@code first-compatible}</li>
          *   <li>acceptedOutputModes: empty list</li>
          *   <li>taskPushNotificationConfig: {@code null}</li>
          *   <li>historyLength: {@code null}</li>

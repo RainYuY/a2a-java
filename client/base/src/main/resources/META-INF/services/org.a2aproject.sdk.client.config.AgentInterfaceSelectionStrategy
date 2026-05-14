@@ -1,0 +1,3 @@
+org.a2aproject.sdk.client.selection.FirstCompatibleAgentInterfaceSelectionStrategy
+org.a2aproject.sdk.client.selection.RandomAgentInterfaceSelectionStrategy
+org.a2aproject.sdk.client.selection.StickyAgentInterfaceSelectionStrategy

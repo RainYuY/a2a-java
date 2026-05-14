@@ -14,6 +14,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
 
+import org.a2aproject.sdk.grpc.StreamResponse;
 import org.a2aproject.sdk.jsonrpc.common.json.InvalidParamsJsonMappingException;
 import org.a2aproject.sdk.jsonrpc.common.json.JsonMappingException;
 import org.a2aproject.sdk.jsonrpc.common.json.JsonProcessingException;
@@ -347,6 +348,59 @@ public class JSONRPCUtilsTest {
         assertNotNull(response.getResult());
         assertEquals("task-123", response.getResult().taskId());
         assertEquals("https://example.com/callback", response.getResult().url());
+    }
+
+    @Test
+    public void testParseResponseBody_IgnoresNullErrorField() throws Exception {
+        String responseJson = """
+            {
+              "jsonrpc": "2.0",
+              "id": 2,
+              "result": {
+                "tenant": "tenant",
+                "taskId": "task-123",
+                "id": "config-456",
+                "url": "https://example.com/callback"
+              },
+              "error": null
+            }
+            """;
+
+        GetTaskPushNotificationConfigResponse response =
+            (GetTaskPushNotificationConfigResponse) JSONRPCUtils.parseResponseBody(responseJson, GET_TASK_PUSH_NOTIFICATION_CONFIG_METHOD);
+
+        assertNotNull(response);
+        assertEquals(2, response.getId());
+        assertNotNull(response.getResult());
+        assertEquals("task-123", response.getResult().taskId());
+        assertEquals("https://example.com/callback", response.getResult().url());
+    }
+
+    @Test
+    public void testParseResponseEvent_IgnoresNullErrorField() throws Exception {
+        String responseJson = """
+            {
+              "jsonrpc": "2.0",
+              "id": "1234",
+              "result": {
+                "statusUpdate": {
+                  "taskId": "task-123",
+                  "contextId": "context-456",
+                  "status": {
+                    "state": "TASK_STATE_SUBMITTED"
+                  }
+                }
+              },
+              "error": null
+            }
+            """;
+
+        StreamResponse response = JSONRPCUtils.parseResponseEvent(responseJson);
+
+        assertNotNull(response);
+        assertEquals(StreamResponse.PayloadCase.STATUS_UPDATE, response.getPayloadCase());
+        assertEquals("task-123", response.getStatusUpdate().getTaskId());
+        assertEquals("context-456", response.getStatusUpdate().getContextId());
     }
 
     @Test

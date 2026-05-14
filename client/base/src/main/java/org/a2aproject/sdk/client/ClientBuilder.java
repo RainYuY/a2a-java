@@ -119,6 +119,7 @@ public class ClientBuilder {
     private ClientConfig clientConfig = new ClientConfig.Builder().build();
 
     private final Map<Class<? extends ClientTransport>, ClientTransportConfig<? extends ClientTransport>> clientTransports = new LinkedHashMap<>();
+    private @Nullable AgentInterfaceSelection agentInterfaceSelection;
 
     /**
      * Package-private constructor used by {@link Client#builder(AgentCard)}.
@@ -171,6 +172,7 @@ public class ClientBuilder {
      */
     public <T extends ClientTransport> ClientBuilder withTransport(Class<T> clazz, ClientTransportConfig<T> config) {
         clientTransports.put(clazz, config);
+        agentInterfaceSelection = null;
 
         return this;
     }
@@ -256,6 +258,7 @@ public class ClientBuilder {
      *   <li>Streaming vs blocking mode</li>
      *   <li>Polling for updates vs receiving events</li>
      *   <li>Client vs server transport preference</li>
+     *   <li>Agent interface selection strategy</li>
      *   <li>Output modes, history length, and metadata</li>
      * </ul>
      * <p>
@@ -275,6 +278,7 @@ public class ClientBuilder {
      */
     public ClientBuilder clientConfig(@NonNull ClientConfig clientConfig) {
         this.clientConfig = clientConfig;
+        agentInterfaceSelection = null;
         return this;
     }
 
@@ -282,12 +286,15 @@ public class ClientBuilder {
      * Build the configured {@link Client} instance.
      * <p>
      * This method performs transport negotiation between the client's configured transports
-     * and the agent's {@link AgentCard#supportedInterfaces()}. The selection algorithm:
+     * and the agent's {@link AgentCard#supportedInterfaces()}, then selects an endpoint
+     * for the negotiated protocol. The selection algorithm:
      * <ol>
      *   <li>If {@link ClientConfig#isUseClientPreference()} is {@code true}, iterate through
      *       client transports in registration order and select the first one the server supports</li>
      *   <li>Otherwise, iterate through server interfaces in preference order (first entry
      *       in {@link AgentCard#supportedInterfaces()}) and select the first one the client supports</li>
+     *   <li>If the selected protocol has multiple interfaces, use
+     *       {@link ClientConfig#getAgentInterfaceSelectionStrategy()} to select the node</li>
      * </ol>
      * <p>
      * <b>Important:</b> At least one transport must be configured via {@link #withTransport},
@@ -306,39 +313,23 @@ public class ClientBuilder {
         return new Client(agentCard, clientConfig, clientTransport, consumers, streamErrorHandler);
     }
 
-    @SuppressWarnings("unchecked")
     private ClientTransport buildClientTransport() throws A2AClientException {
-        // Get the preferred transport
-        AgentInterface agentInterface = findBestClientTransport();
+        List<AgentInterface> candidateInterfaces = findCandidateAgentInterfaces();
+        validateTransportConfiguration(candidateInterfaces.get(0));
 
-        // Get the transport provider associated with the protocol
-        ClientTransportProvider clientTransportProvider = transportProviderRegistry.get(agentInterface.protocolBinding());
-        if (clientTransportProvider == null) {
-            throw new A2AClientException("No client available for " + agentInterface.protocolBinding());
+        if (AgentInterfaceSelectionStrategyRegistry.isFirstCompatible(
+                clientConfig.getAgentInterfaceSelectionStrategy(), clientConfig.getAgentInterfaceSelector())) {
+            return createClientTransport(candidateInterfaces.get(0));
         }
-        Class<? extends ClientTransport> transportProtocolClass = clientTransportProvider.getTransportProtocolClass();
-
-        // Retrieve the configuration associated with the preferred transport
-        ClientTransportConfig<? extends ClientTransport> clientTransportConfig = clientTransports.get(transportProtocolClass);
-
-        if (clientTransportConfig == null) {
-            throw new A2AClientException("Missing required TransportConfig for " + agentInterface.protocolBinding());
-        }
-
-        return wrap(clientTransportProvider.create(clientTransportConfig, agentCard, agentInterface), clientTransportConfig);
+        return createRoutingClientTransport(candidateInterfaces);
     }
 
-    private Map<String, AgentInterface> getServerInterfacesMap() throws A2AClientException {
+    private List<AgentInterface> getServerInterfaces() throws A2AClientException {
         List<AgentInterface> serverInterfaces = agentCard.supportedInterfaces();
         if (serverInterfaces == null || serverInterfaces.isEmpty()) {
             throw new A2AClientException("No server interface available in the AgentCard");
         }
-        // If there are multiple interfaces with the same protocol binding, only the first is considered
-        Map<String, AgentInterface> serverInterfacesMap = new LinkedHashMap<>();
-        for (AgentInterface iface : serverInterfaces) {
-            serverInterfacesMap.putIfAbsent(iface.protocolBinding(), iface);
-        }
-        return serverInterfacesMap;
+        return serverInterfaces;
     }
 
     private List<String> getClientPreferredTransports() {
@@ -355,36 +346,129 @@ public class ClientBuilder {
 
     // Package-private for testing
     AgentInterface findBestClientTransport() throws A2AClientException {
-        Map<String, AgentInterface> serverInterfacesMap = getServerInterfacesMap();
-        List<String> clientPreferredTransports = getClientPreferredTransports();
+        return findBestClientTransport(null);
+    }
 
-        AgentInterface matchedInterface = null;
+    // Package-private for testing
+    AgentInterface findBestClientTransport(@Nullable Object request) throws A2AClientException {
+        return getOrCreateAgentInterfaceSelection().select("client.select", request);
+    }
+
+    private AgentInterfaceSelection createAgentInterfaceSelection(List<AgentInterface> candidateInterfaces)
+            throws A2AClientException {
+        return new AgentInterfaceSelection(
+                agentCard,
+                candidateInterfaces,
+                AgentInterfaceSelectionStrategyRegistry.createSelector(
+                        clientConfig.getAgentInterfaceSelectionStrategy(),
+                        clientConfig.getAgentInterfaceSelector()));
+    }
+
+    private AgentInterfaceSelection getOrCreateAgentInterfaceSelection() throws A2AClientException {
+        if (agentInterfaceSelection == null) {
+            agentInterfaceSelection = createAgentInterfaceSelection(findCandidateAgentInterfaces());
+        }
+        return agentInterfaceSelection;
+    }
+
+    private ClientTransport createRoutingClientTransport(List<AgentInterface> candidateInterfaces)
+            throws A2AClientException {
+        ClientTransport routingTransport = RoutingClientTransport.create(
+                createAgentInterfaceSelection(candidateInterfaces),
+                this::createRawClientTransport);
+        return wrap(routingTransport, getClientTransportConfig(candidateInterfaces.get(0)));
+    }
+
+    private List<AgentInterface> findCandidateAgentInterfaces() throws A2AClientException {
+        List<AgentInterface> serverInterfaces = getServerInterfaces();
+        List<String> clientPreferredTransports = getClientPreferredTransports();
+        String selectedProtocolBinding = findSelectedProtocolBinding(serverInterfaces, clientPreferredTransports);
+
+        List<AgentInterface> candidateInterfaces = new ArrayList<>();
+        for (AgentInterface iface : serverInterfaces) {
+            if (selectedProtocolBinding.equals(iface.protocolBinding())) {
+                candidateInterfaces.add(iface);
+            }
+        }
+
+        if (candidateInterfaces.isEmpty()) {
+            throw new A2AClientException("No compatible transport found");
+        }
+        return candidateInterfaces;
+    }
+
+    private String findSelectedProtocolBinding(List<AgentInterface> serverInterfaces, List<String> clientPreferredTransports)
+            throws A2AClientException {
+        String matchedProtocolBinding = null;
         if (clientConfig.isUseClientPreference()) {
             // Client preference: iterate client transports first, find first server match
             for (String clientPreferredTransport : clientPreferredTransports) {
-                if (serverInterfacesMap.containsKey(clientPreferredTransport)) {
-                    matchedInterface = serverInterfacesMap.get(clientPreferredTransport);
+                if (hasServerInterface(serverInterfaces, clientPreferredTransport)) {
+                    matchedProtocolBinding = clientPreferredTransport;
                     break;
                 }
             }
         } else {
-            // Server preference: iterate server interfaces first, find first client match
-            for (AgentInterface iface : serverInterfacesMap.values()) {
+            // Server preference: iterate server interfaces first, find first client match.
+            // Multiple interfaces with the same protocol are preserved for node selection.
+            for (AgentInterface iface : serverInterfaces) {
                 if (clientPreferredTransports.contains(iface.protocolBinding())) {
-                    matchedInterface = iface;
+                    matchedProtocolBinding = iface.protocolBinding();
                     break;
                 }
             }
         }
 
-        if (matchedInterface == null) {
+        if (matchedProtocolBinding == null) {
             throw new A2AClientException("No compatible transport found");
         }
-        if (!transportProviderRegistry.containsKey(matchedInterface.protocolBinding())) {
-            throw new A2AClientException("No client available for " + matchedInterface.protocolBinding());
+        if (!transportProviderRegistry.containsKey(matchedProtocolBinding)) {
+            throw new A2AClientException("No client available for " + matchedProtocolBinding);
         }
 
-        return matchedInterface;
+        return matchedProtocolBinding;
+    }
+
+    private boolean hasServerInterface(List<AgentInterface> serverInterfaces, String protocolBinding) {
+        for (AgentInterface iface : serverInterfaces) {
+            if (protocolBinding.equals(iface.protocolBinding())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private ClientTransport createClientTransport(AgentInterface agentInterface) throws A2AClientException {
+        return wrap(createRawClientTransport(agentInterface), getClientTransportConfig(agentInterface));
+    }
+
+    @SuppressWarnings("unchecked")
+    private ClientTransport createRawClientTransport(AgentInterface agentInterface) throws A2AClientException {
+        ClientTransportProvider clientTransportProvider = transportProviderRegistry.get(agentInterface.protocolBinding());
+        if (clientTransportProvider == null) {
+            throw new A2AClientException("No client available for " + agentInterface.protocolBinding());
+        }
+
+        return clientTransportProvider.create(getClientTransportConfig(agentInterface), agentCard, agentInterface);
+    }
+
+    private void validateTransportConfiguration(AgentInterface agentInterface) throws A2AClientException {
+        getClientTransportConfig(agentInterface);
+    }
+
+    private ClientTransportConfig<? extends ClientTransport> getClientTransportConfig(AgentInterface agentInterface)
+            throws A2AClientException {
+        ClientTransportProvider<? extends ClientTransport, ? extends ClientTransportConfig<?>> clientTransportProvider =
+                transportProviderRegistry.get(agentInterface.protocolBinding());
+        if (clientTransportProvider == null) {
+            throw new A2AClientException("No client available for " + agentInterface.protocolBinding());
+        }
+        Class<? extends ClientTransport> transportProtocolClass = clientTransportProvider.getTransportProtocolClass();
+        ClientTransportConfig<? extends ClientTransport> clientTransportConfig = clientTransports.get(transportProtocolClass);
+        if (clientTransportConfig == null) {
+            throw new A2AClientException("Missing required TransportConfig for " + agentInterface.protocolBinding());
+        }
+        return clientTransportConfig;
     }
 
     /**

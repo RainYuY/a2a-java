@@ -290,8 +290,9 @@ public class JSONRPCUtils {
         JsonObject jsonRpc = jelement.getAsJsonObject();
         String version = getAndValidateJsonrpc(jsonRpc);
         // Check for error before validating id: per JSON-RPC spec, error responses may have null id
-        if (jsonRpc.has("error")) {
-            throw processError(jsonRpc.getAsJsonObject("error"));
+        JsonElement errorNode = jsonRpc.get("error");
+        if (errorNode != null && !errorNode.isJsonNull()) {
+            throw processError(errorNode.getAsJsonObject());
         }
         Object id = getAndValidateId(jsonRpc);
         JsonElement paramsNode = jsonRpc.get("result");
@@ -306,8 +307,9 @@ public class JSONRPCUtils {
         String version = getAndValidateJsonrpc(jsonRpc);
         Object id = getAndValidateId(jsonRpc);
         JsonElement paramsNode = jsonRpc.get("result");
-        if (jsonRpc.has("error")) {
-            return parseError(jsonRpc.getAsJsonObject("error"), id, method);
+        JsonElement errorNode = jsonRpc.get("error");
+        if (errorNode != null && !errorNode.isJsonNull()) {
+            return parseError(errorNode.getAsJsonObject(), id, method);
         }
         switch (method) {
             case GET_TASK_METHOD -> {
