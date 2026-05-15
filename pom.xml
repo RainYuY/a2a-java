@@ -503,6 +503,7 @@
                         <!-- This should point to a server entry in your settings.xml -->
                         <publishingServerId>central-a2asdk-temp</publishingServerId>
                         <autoPublish>${release.auto.publish}</autoPublish>
+                        <skipPublishing>true</skipPublishing>
                     </configuration>
                 </plugin>
                 <plugin>
@@ -555,10 +556,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-            </plugin>
-            <plugin>
-                <groupId>org.sonatype.central</groupId>
-                <artifactId>central-publishing-maven-plugin</artifactId>
             </plugin>
         </plugins>
     </build>
