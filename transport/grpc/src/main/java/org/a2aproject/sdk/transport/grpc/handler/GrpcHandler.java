@@ -21,7 +21,6 @@ import com.google.protobuf.Empty;
 import org.a2aproject.sdk.common.A2AErrorMessages;
 import org.a2aproject.sdk.grpc.A2AServiceGrpc;
 import org.a2aproject.sdk.grpc.StreamResponse;
-import org.a2aproject.sdk.jsonrpc.common.json.JsonUtil;
 import org.a2aproject.sdk.jsonrpc.common.wrappers.ListTasksResult;
 import org.a2aproject.sdk.server.AgentCardValidator;
 import org.a2aproject.sdk.server.ServerCallContext;
@@ -64,7 +63,6 @@ import org.a2aproject.sdk.transport.grpc.context.GrpcContextKeys;
 import io.grpc.Context;
 import io.grpc.Metadata;
 import io.grpc.Status;
-import io.grpc.protobuf.StatusProto;
 import io.grpc.stub.StreamObserver;
 import org.jspecify.annotations.Nullable;
 
@@ -736,24 +734,11 @@ public abstract class GrpcHandler extends A2AServiceGrpc.A2AServiceImplBase {
     private <V> void handleError(StreamObserver<V> responseObserver, A2AError error) {
         A2AErrorCodes errorCode = A2AErrorCodes.fromCode(error.getCode());
         String grpcStatusName = errorCode != null ? errorCode.grpcStatus() : "UNKNOWN";
-        String reason = errorCode != null ? errorCode.name() : "UNKNOWN";
         int grpcCode = Status.Code.valueOf(grpcStatusName).value();
+        String message = error.getMessage() != null ? error.getMessage() : "";
 
-        com.google.rpc.ErrorInfo.Builder errorInfoBuilder = com.google.rpc.ErrorInfo.newBuilder()
-                .setReason(reason)
-                .setDomain("a2a-protocol.org");
-        if (!error.getDetails().isEmpty()) {
-            error.getDetails().forEach((k, v) ->
-                    errorInfoBuilder.putMetadata(k, v instanceof String s ? s : JsonUtil.OBJECT_MAPPER.toJson(v)));
-        }
-
-        com.google.rpc.Status rpcStatus = com.google.rpc.Status.newBuilder()
-                .setCode(grpcCode)
-                .setMessage(error.getMessage() != null ? error.getMessage() : "")
-                .addDetails(com.google.protobuf.Any.pack(errorInfoBuilder.build()))
-                .build();
-
-        responseObserver.onError(StatusProto.toStatusRuntimeException(rpcStatus));
+        Status grpcStatus = Status.fromCodeValue(grpcCode).withDescription(message);
+        responseObserver.onError(grpcStatus.asRuntimeException());
     }
 
     /**

@@ -90,7 +90,7 @@ public class RestErrorMapper {
     private static @org.jspecify.annotations.Nullable ReasonAndMetadata extractReasonAndMetadata(JsonObject errorObj) {
         if (errorObj.has("details") && errorObj.get("details").isJsonArray()) {
             var details = errorObj.getAsJsonArray("details");
-            if (!details.isEmpty() && details.get(0).isJsonObject()) {
+            if (details.size() > 0 && details.get(0).isJsonObject()) {
                 JsonObject detail = details.get(0).getAsJsonObject();
                 if (detail.has("reason")) {
                     String reason = detail.get("reason").getAsString();

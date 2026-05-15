@@ -15,8 +15,8 @@ import static org.a2aproject.sdk.compat03.spec.A2AErrorCodes_v0_3.UNSUPPORTED_OP
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.ToNumberPolicy;
 import com.google.gson.TypeAdapter;
 import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
@@ -70,7 +70,13 @@ public class JsonUtil_v0_3 {
 
     private static GsonBuilder createBaseGsonBuilder() {
         return new GsonBuilder()
-                .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
+                .registerTypeAdapter(Number.class, (JsonDeserializer<Number>) (json, typeOfT, context) -> {
+                    double d = json.getAsDouble();
+                    if (d == Math.floor(d) && !Double.isInfinite(d) && Math.abs(d) < Long.MAX_VALUE) {
+                        return (long) d;
+                    }
+                    return d;
+                })
                 .registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeTypeAdapter())
                 // Register JSONRPCError hierarchy adapter for all error subclasses
                 .registerTypeAdapterFactory(new JSONRPCErrorTypeAdapterFactory())

@@ -1219,18 +1219,6 @@ public class GrpcHandlerTest extends AbstractA2ARequestHandlerTest {
         StatusRuntimeException sre = (StatusRuntimeException) streamRecorder.getError();
         Assertions.assertEquals(expectedStatusCode, sre.getStatus().getCode());
         Assertions.assertTrue(streamRecorder.getValues().isEmpty());
-
-        // Verify ErrorInfo is present in status details
-        com.google.rpc.Status rpcStatus = io.grpc.protobuf.StatusProto.fromThrowable(sre);
-        Assertions.assertNotNull(rpcStatus, "rpc status should be present");
-        Assertions.assertFalse(rpcStatus.getDetailsList().isEmpty(), "details should not be empty");
-        try {
-            com.google.rpc.ErrorInfo errorInfo = rpcStatus.getDetails(0).unpack(com.google.rpc.ErrorInfo.class);
-            Assertions.assertEquals("a2a-protocol.org", errorInfo.getDomain());
-            Assertions.assertFalse(errorInfo.getReason().isEmpty(), "reason should not be empty");
-        } catch (com.google.protobuf.InvalidProtocolBufferException e) {
-            Assertions.fail("Failed to unpack ErrorInfo: " + e.getMessage());
-        }
     }
 
     @Test

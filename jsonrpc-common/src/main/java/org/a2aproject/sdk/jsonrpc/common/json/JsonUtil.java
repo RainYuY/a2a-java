@@ -7,6 +7,8 @@ import static org.a2aproject.sdk.spec.TextPart.TEXT;
 import static java.lang.String.format;
 import static java.util.Collections.emptyMap;
 
+import java.lang.reflect.Constructor;
+import java.lang.reflect.RecordComponent;
 import java.lang.reflect.Type;
 import java.time.OffsetDateTime;
 import java.time.format.DateTimeFormatter;
@@ -20,10 +22,13 @@ import java.util.Set;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.ToNumberPolicy;
 import com.google.gson.TypeAdapter;
+import com.google.gson.TypeAdapterFactory;
 import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonToken;
@@ -72,7 +77,14 @@ public class JsonUtil {
 
     private static GsonBuilder createBaseGsonBuilder() {
         return new GsonBuilder()
-                .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
+                .registerTypeAdapterFactory(new RecordTypeAdapterFactory())
+                .registerTypeAdapter(Number.class, (JsonDeserializer<Number>) (json, typeOfT, context) -> {
+                    double d = json.getAsDouble();
+                    if (d == Math.floor(d) && !Double.isInfinite(d) && Math.abs(d) < Long.MAX_VALUE) {
+                        return (long) d;
+                    }
+                    return d;
+                })
                 .registerTypeAdapter(OffsetDateTime.class, new OffsetDateTimeTypeAdapter())
                 .registerTypeAdapter(SecurityRequirement.class, new SecurityRequirementTypeAdapter())
                 .registerTypeHierarchyAdapter(A2AError.class, new A2AErrorTypeAdapter())
@@ -1080,6 +1092,93 @@ public class JsonUtil {
             in.endObject();
 
             return scopes;
+        }
+    }
+
+    /**
+     * A {@link TypeAdapterFactory} that supports deserialization of Java {@code record} types.
+     * <p>
+     * Gson's default reflection-based adapter cannot set {@code final} fields in records on
+     * Java 17+. This factory reads each record component by name from the JSON object and
+     * invokes the canonical constructor to create the instance.
+     */
+    static class RecordTypeAdapterFactory implements TypeAdapterFactory {
+
+        @Override
+        public @org.jspecify.annotations.Nullable <T> TypeAdapter<T> create(Gson gson, TypeToken<T> type) {
+            Class<? super T> rawType = type.getRawType();
+            if (!rawType.isRecord()) {
+                return null;
+            }
+            return new RecordTypeAdapter<>(gson, type);
+        }
+
+        private static class RecordTypeAdapter<T> extends TypeAdapter<T> {
+            private final Gson gson;
+            private final TypeToken<T> typeToken;
+
+            RecordTypeAdapter(Gson gson, TypeToken<T> typeToken) {
+                this.gson = gson;
+                this.typeToken = typeToken;
+            }
+
+            @Override
+            public void write(JsonWriter out, T value) throws java.io.IOException {
+                if (value == null) {
+                    out.nullValue();
+                    return;
+                }
+                RecordComponent[] components = value.getClass().getRecordComponents();
+                out.beginObject();
+                for (RecordComponent component : components) {
+                    out.name(component.getName());
+                    try {
+                        Object fieldValue = component.getAccessor().invoke(value);
+                        TypeAdapter<Object> adapter = (TypeAdapter<Object>) gson.getAdapter(TypeToken.get(component.getGenericType()));
+                        adapter.write(out, fieldValue);
+                    } catch (Exception e) {
+                        throw new java.io.IOException("Failed to serialize record component: " + component.getName(), e);
+                    }
+                }
+                out.endObject();
+            }
+
+            @Override
+            @SuppressWarnings("unchecked")
+            public @org.jspecify.annotations.Nullable T read(JsonReader in) throws java.io.IOException {
+                if (in.peek() == JsonToken.NULL) {
+                    in.nextNull();
+                    return null;
+                }
+                Class<? super T> rawType = typeToken.getRawType();
+                RecordComponent[] components = rawType.getRecordComponents();
+                Map<String, JsonElement> jsonMap = new LinkedHashMap<>();
+                in.beginObject();
+                while (in.hasNext()) {
+                    jsonMap.put(in.nextName(), JsonParser.parseReader(in));
+                }
+                in.endObject();
+
+                Object @org.jspecify.annotations.Nullable [] args = new Object[components.length];
+                Class<?>[] paramTypes = new Class<?>[components.length];
+                for (int i = 0; i < components.length; i++) {
+                    RecordComponent component = components[i];
+                    paramTypes[i] = component.getType();
+                    JsonElement element = jsonMap.get(component.getName());
+                    if (element != null && !element.isJsonNull()) {
+                        TypeAdapter<Object> adapter = (TypeAdapter<Object>) gson.getAdapter(TypeToken.get(component.getGenericType()));
+                        args[i] = adapter.fromJsonTree(element);
+                    }
+                    // else: leave args[i] as null (default for Object[])
+                }
+                try {
+                    Constructor<? super T> constructor = rawType.getDeclaredConstructor(paramTypes);
+                    constructor.setAccessible(true);
+                    return (T) constructor.newInstance(args);
+                } catch (Exception e) {
+                    throw new java.io.IOException("Failed to instantiate record: " + rawType.getName(), e);
+                }
+            }
         }
     }
 }

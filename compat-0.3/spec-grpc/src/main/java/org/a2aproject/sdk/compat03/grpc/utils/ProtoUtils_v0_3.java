@@ -912,7 +912,7 @@ public class ProtoUtils_v0_3 {
         }
 
         private static Part_v0_3<?> part(org.a2aproject.sdk.compat03.grpc.PartOrBuilder part) {
-            if (part.hasText()) {
+            if (part.getPartCase() == org.a2aproject.sdk.compat03.grpc.Part.PartCase.TEXT) {
                 return textPart(part.getText());
             } else if (part.hasFile()) {
                 return filePart(part.getFile());
@@ -927,9 +927,9 @@ public class ProtoUtils_v0_3 {
         }
 
         private static FilePart_v0_3 filePart(org.a2aproject.sdk.compat03.grpc.FilePartOrBuilder filePart) {
-            if (filePart.hasFileWithBytes()) {
+            if (filePart.getFileCase() == org.a2aproject.sdk.compat03.grpc.FilePart.FileCase.FILE_WITH_BYTES) {
                 return new FilePart_v0_3(new FileWithBytes_v0_3(filePart.getMimeType(), null, filePart.getFileWithBytes().toStringUtf8()));
-            } else if (filePart.hasFileWithUri()) {
+            } else if (filePart.getFileCase() == org.a2aproject.sdk.compat03.grpc.FilePart.FileCase.FILE_WITH_URI) {
                 return new FilePart_v0_3(new FileWithUri_v0_3(filePart.getMimeType(), null, filePart.getFileWithUri()));
             }
             throw new InvalidRequestError_v0_3();

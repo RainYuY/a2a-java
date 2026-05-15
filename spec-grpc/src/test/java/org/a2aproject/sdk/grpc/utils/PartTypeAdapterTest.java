@@ -62,7 +62,7 @@ public class PartTypeAdapterTest {
     public void shouldDeserializeTextPart() throws JsonProcessingException, InvalidProtocolBufferException {
         org.a2aproject.sdk.grpc.Part.Builder builder = org.a2aproject.sdk.grpc.Part.newBuilder();
         builder.setText("Hello, world!");
-        String json = JsonFormat.printer().alwaysPrintFieldsWithNoPresence().omittingInsignificantWhitespace().print(builder);
+        String json = JsonFormat.printer().includingDefaultValueFields().omittingInsignificantWhitespace().print(builder);
         Part<?>part = JsonUtil.fromJson(json, Part.class);
         assertInstanceOf(TextPart.class, part);
         TextPart textPart = (TextPart) part;
@@ -76,7 +76,7 @@ public class PartTypeAdapterTest {
         org.a2aproject.sdk.grpc.Part.Builder builder = org.a2aproject.sdk.grpc.Part.newBuilder();
         builder.setText("Hi");
         builder.setMetadata(A2ACommonFieldMapper.INSTANCE.metadataToProto(Map.of("key", "value")));
-        String json = JsonFormat.printer().alwaysPrintFieldsWithNoPresence().omittingInsignificantWhitespace().print(builder);
+        String json = JsonFormat.printer().includingDefaultValueFields().omittingInsignificantWhitespace().print(builder);
         Part<?> part = JsonUtil.fromJson(json, Part.class);
         assertInstanceOf(TextPart.class, part);
         TextPart textPart = (TextPart) part;
@@ -114,7 +114,7 @@ public class PartTypeAdapterTest {
         org.a2aproject.sdk.grpc.Part.Builder builder = org.a2aproject.sdk.grpc.Part.newBuilder();
         builder.setFilename("diagram.png").setMediaType("image/png").setRaw(ByteString.copyFrom(Base64.getDecoder().decode("abc12w==")));
         builder.setMetadata(A2ACommonFieldMapper.INSTANCE.metadataToProto(Map.of("key", "value")));
-        String json = JsonFormat.printer().alwaysPrintFieldsWithNoPresence().omittingInsignificantWhitespace().print(builder);
+        String json = JsonFormat.printer().includingDefaultValueFields().omittingInsignificantWhitespace().print(builder);
         Part<?> part = JsonUtil.fromJson(json, Part.class);
         assertInstanceOf(FilePart.class, part);
         FilePart filePart = (FilePart) part;
@@ -193,7 +193,7 @@ public class PartTypeAdapterTest {
         org.a2aproject.sdk.grpc.Part.Builder builder = org.a2aproject.sdk.grpc.Part.newBuilder();
         builder.setFilename("photo.png").setMediaType("image/png").setUrl("https://example.com/photo.png");
         builder.setMetadata(A2ACommonFieldMapper.INSTANCE.metadataToProto(Map.of("key", "value")));
-        String json = JsonFormat.printer().alwaysPrintFieldsWithNoPresence().omittingInsignificantWhitespace().print(builder);
+        String json = JsonFormat.printer().includingDefaultValueFields().omittingInsignificantWhitespace().print(builder);
         Part<?> part = JsonUtil.fromJson(json, Part.class);
         assertInstanceOf(FilePart.class, part);
         FilePart filePart = (FilePart) part;
@@ -252,7 +252,7 @@ public class PartTypeAdapterTest {
         org.a2aproject.sdk.grpc.Part.Builder builder = org.a2aproject.sdk.grpc.Part.newBuilder();
         builder.setData(Value.newBuilder().setStructValue(Structs.of("count", Value.newBuilder().setNumberValue(42).build(), "label", Value.newBuilder().setStringValue("items").build())));
         builder.setMetadata(A2ACommonFieldMapper.INSTANCE.metadataToProto(Map.of("key", "value")));
-        String json = JsonFormat.printer().alwaysPrintFieldsWithNoPresence().omittingInsignificantWhitespace().print(builder);
+        String json = JsonFormat.printer().includingDefaultValueFields().omittingInsignificantWhitespace().print(builder);
         Part<?> part = JsonUtil.fromJson(json, Part.class);
         assertInstanceOf(DataPart.class, part);
         @SuppressWarnings("unchecked")

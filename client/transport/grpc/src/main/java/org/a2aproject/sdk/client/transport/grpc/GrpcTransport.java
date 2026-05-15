@@ -25,7 +25,7 @@ import org.a2aproject.sdk.client.transport.spi.interceptors.PayloadAndHeaders;
 import org.a2aproject.sdk.client.transport.spi.interceptors.auth.AuthInterceptor;
 import org.a2aproject.sdk.common.A2AHeaders;
 import org.a2aproject.sdk.grpc.A2AServiceGrpc;
-import org.a2aproject.sdk.grpc.A2AServiceGrpc.A2AServiceBlockingV2Stub;
+import org.a2aproject.sdk.grpc.A2AServiceGrpc.A2AServiceBlockingStub;
 import org.a2aproject.sdk.grpc.A2AServiceGrpc.A2AServiceStub;
 import org.a2aproject.sdk.grpc.GetExtendedAgentCardRequest;
 import org.a2aproject.sdk.grpc.utils.ProtoUtils.FromProto;
@@ -50,7 +50,6 @@ import org.a2aproject.sdk.spec.TaskPushNotificationConfig;
 import org.a2aproject.sdk.spec.TaskQueryParams;
 import io.grpc.Channel;
 import io.grpc.Metadata;
-import io.grpc.StatusException;
 import io.grpc.StatusRuntimeException;
 import io.grpc.stub.MetadataUtils;
 import io.grpc.stub.StreamObserver;
@@ -67,7 +66,7 @@ public class GrpcTransport implements ClientTransport {
     private static final Metadata.Key<String> VERSION_KEY = Metadata.Key.of(
             A2AHeaders.A2A_VERSION.toLowerCase(),
             Metadata.ASCII_STRING_MARSHALLER);
-    private final A2AServiceBlockingV2Stub blockingStub;
+    private final A2AServiceBlockingStub blockingStub;
     private final A2AServiceStub asyncStub;
     private final @Nullable List<ClientCallInterceptor> interceptors;
     private final AgentCard agentCard;
@@ -81,7 +80,7 @@ public class GrpcTransport implements ClientTransport {
         checkNotNullParam("channel", channel);
         checkNotNullParam("agentCard", agentCard);
         this.asyncStub = A2AServiceGrpc.newStub(channel);
-        this.blockingStub = A2AServiceGrpc.newBlockingV2Stub(channel);
+        this.blockingStub = A2AServiceGrpc.newBlockingStub(channel);
         this.agentCard = agentCard;
         this.interceptors = interceptors;
         this.agentTenant = agentTenant == null || agentTenant.isBlank() ? "" : agentTenant;
@@ -107,7 +106,7 @@ public class GrpcTransport implements ClientTransport {
                 agentCard, context);
 
         try {
-            A2AServiceBlockingV2Stub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
+            A2AServiceBlockingStub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
             org.a2aproject.sdk.grpc.SendMessageResponse response = stubWithMetadata.sendMessage(sendMessageRequest);
             if (response.hasMessage()) {
                 return FromProto.message(response.getMessage());
@@ -116,7 +115,7 @@ public class GrpcTransport implements ClientTransport {
             } else {
                 throw new A2AClientException("Server response did not contain a message or task");
             }
-        } catch (StatusRuntimeException | StatusException e) {
+        } catch (StatusRuntimeException e) {
             throw GrpcErrorMapper.mapGrpcError(e, "Failed to send message: ");
         }
     }
@@ -155,9 +154,9 @@ public class GrpcTransport implements ClientTransport {
                 agentCard, context);
 
         try {
-            A2AServiceBlockingV2Stub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
+            A2AServiceBlockingStub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
             return FromProto.task(stubWithMetadata.getTask(getTaskRequest));
-        } catch (StatusRuntimeException | StatusException e) {
+        } catch (StatusRuntimeException e) {
             throw GrpcErrorMapper.mapGrpcError(e, "Failed to get task: ");
         }
     }
@@ -173,9 +172,9 @@ public class GrpcTransport implements ClientTransport {
         PayloadAndHeaders payloadAndHeaders = applyInterceptors(CANCEL_TASK_METHOD, cancelTaskRequest, agentCard, context);
 
         try {
-            A2AServiceBlockingV2Stub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
+            A2AServiceBlockingStub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
             return FromProto.task(stubWithMetadata.cancelTask(cancelTaskRequest));
-        } catch (StatusRuntimeException | StatusException e) {
+        } catch (StatusRuntimeException e) {
             throw GrpcErrorMapper.mapGrpcError(e, "Failed to cancel task: ");
         }
     }
@@ -215,7 +214,7 @@ public class GrpcTransport implements ClientTransport {
         PayloadAndHeaders payloadAndHeaders = applyInterceptors(LIST_TASK_METHOD, listTasksRequest, agentCard, context);
 
         try {
-            A2AServiceBlockingV2Stub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
+            A2AServiceBlockingStub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
             org.a2aproject.sdk.grpc.ListTasksResponse grpcResponse = stubWithMetadata.listTasks(listTasksRequest);
 
             return new ListTasksResult(
@@ -226,7 +225,7 @@ public class GrpcTransport implements ClientTransport {
                     grpcResponse.getTasksCount(),
                     grpcResponse.getNextPageToken().isEmpty() ? null : grpcResponse.getNextPageToken()
             );
-        } catch (StatusRuntimeException | StatusException e) {
+        } catch (StatusRuntimeException e) {
             throw GrpcErrorMapper.mapGrpcError(e, "Failed to list tasks: ");
         }
     }
@@ -240,9 +239,9 @@ public class GrpcTransport implements ClientTransport {
         PayloadAndHeaders payloadAndHeaders = applyInterceptors(SET_TASK_PUSH_NOTIFICATION_CONFIG_METHOD, grpcRequest, agentCard, context);
 
         try {
-            A2AServiceBlockingV2Stub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
+            A2AServiceBlockingStub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
             return FromProto.taskPushNotificationConfig(stubWithMetadata.createTaskPushNotificationConfig(grpcRequest));
-        } catch (StatusRuntimeException | StatusException e) {
+        } catch (StatusRuntimeException e) {
             throw GrpcErrorMapper.mapGrpcError(e, "Failed to create task push notification config: ");
         }
     }
@@ -264,9 +263,9 @@ public class GrpcTransport implements ClientTransport {
         PayloadAndHeaders payloadAndHeaders = applyInterceptors(GET_TASK_PUSH_NOTIFICATION_CONFIG_METHOD, grpcRequest, agentCard, context);
 
         try {
-            A2AServiceBlockingV2Stub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
+            A2AServiceBlockingStub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
             return FromProto.taskPushNotificationConfig(stubWithMetadata.getTaskPushNotificationConfig(grpcRequest));
-        } catch (StatusRuntimeException | StatusException e) {
+        } catch (StatusRuntimeException e) {
             throw GrpcErrorMapper.mapGrpcError(e, "Failed to get task push notification config: ");
         }
     }
@@ -287,10 +286,10 @@ public class GrpcTransport implements ClientTransport {
                 grpcRequest, agentCard, context);
 
         try {
-            A2AServiceBlockingV2Stub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
+            A2AServiceBlockingStub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
             org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsResponse grpcResponse = stubWithMetadata.listTaskPushNotificationConfigs(grpcRequest);
             return FromProto.listTaskPushNotificationConfigsResult(grpcResponse);
-        } catch (StatusRuntimeException | StatusException e) {
+        } catch (StatusRuntimeException e) {
             throw GrpcErrorMapper.mapGrpcError(e, "Failed to list task push notification configs: ");
         }
     }
@@ -308,9 +307,9 @@ public class GrpcTransport implements ClientTransport {
         PayloadAndHeaders payloadAndHeaders = applyInterceptors(DELETE_TASK_PUSH_NOTIFICATION_CONFIG_METHOD, grpcRequest, agentCard, context);
 
         try {
-            A2AServiceBlockingV2Stub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
+            A2AServiceBlockingStub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
             stubWithMetadata.deleteTaskPushNotificationConfig(grpcRequest);
-        } catch (StatusRuntimeException | StatusException e) {
+        } catch (StatusRuntimeException e) {
             throw GrpcErrorMapper.mapGrpcError(e, "Failed to delete task push notification config: ");
         }
     }
@@ -362,11 +361,11 @@ public class GrpcTransport implements ClientTransport {
         PayloadAndHeaders payloadAndHeaders = applyInterceptors(GET_EXTENDED_AGENT_CARD_METHOD, request, agentCard, context);
 
         try {
-            A2AServiceBlockingV2Stub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
+            A2AServiceBlockingStub stubWithMetadata = createBlockingStubWithMetadata(context, payloadAndHeaders);
             org.a2aproject.sdk.grpc.AgentCard response = stubWithMetadata.getExtendedAgentCard(request);
 
             return FromProto.agentCard(response);
-        } catch (StatusRuntimeException | StatusException e) {
+        } catch (StatusRuntimeException e) {
             throw GrpcErrorMapper.mapGrpcError(e, "Failed to get extended agent card: ");
         }
     }
@@ -436,7 +435,7 @@ public class GrpcTransport implements ClientTransport {
      * @param payloadAndHeaders the payloadAndHeaders after applying any interceptors
      * @return blocking stub with metadata interceptor
      */
-    private A2AServiceBlockingV2Stub createBlockingStubWithMetadata(@Nullable ClientCallContext context,
+    private A2AServiceBlockingStub createBlockingStubWithMetadata(@Nullable ClientCallContext context,
             PayloadAndHeaders payloadAndHeaders) {
         Metadata metadata = createGrpcMetadata(context, payloadAndHeaders);
         return blockingStub.withInterceptors(MetadataUtils.newAttachHeadersInterceptor(metadata));

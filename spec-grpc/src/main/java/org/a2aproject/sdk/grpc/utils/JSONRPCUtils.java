@@ -21,7 +21,7 @@ import com.google.gson.GsonBuilder;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.google.gson.Strictness;
+import com.google.gson.reflect.TypeToken;
 import com.google.gson.stream.JsonWriter;
 import com.google.protobuf.InvalidProtocolBufferException;
 import com.google.protobuf.util.JsonFormat;
@@ -169,9 +169,7 @@ import org.a2aproject.sdk.jsonrpc.common.json.JsonUtil;
 public class JSONRPCUtils {
 
     private static final Logger log = Logger.getLogger(JSONRPCUtils.class.getName());
-    private static final Gson GSON = new GsonBuilder()
-            .setStrictness(Strictness.STRICT)
-            .create();
+    private static final Gson GSON = new GsonBuilder().create();
     private static final Pattern EXTRACT_WRONG_VALUE = Pattern.compile("Expect (.*) but got: \".*\"");
     private static final Pattern EXTRACT_WRONG_TYPE = Pattern.compile("Expected (.*) but found \".*\"");
     static final String ERROR_MESSAGE = "Invalid request content: %s. Please verify the request matches the expected schema for this method.";
@@ -395,7 +393,6 @@ public class JSONRPCUtils {
         }
     }
 
-    @SuppressWarnings("unchecked")
     private static A2AError processError(JsonObject error) {
         String message = error.has("message") ? error.get("message").getAsString() : null;
         Integer code = error.has("code") ? error.get("code").getAsInt() : null;
@@ -403,11 +400,11 @@ public class JSONRPCUtils {
         if (error.has("data")) {
             JsonElement data = error.get("data");
             if (data.isJsonObject()) {
-                details = GSON.fromJson(data, Map.class);
-            } else if (data.isJsonArray() && !data.getAsJsonArray().isEmpty()) {
+                details = GSON.fromJson(data, new TypeToken<Map<String, Object>>() {}.getType());
+            } else if (data.isJsonArray() && data.getAsJsonArray().size() > 0) {
                 JsonElement first = data.getAsJsonArray().get(0);
                 if (first.isJsonObject()) {
-                    details = GSON.fromJson(first.getAsJsonObject(), Map.class);
+                    details = GSON.fromJson(first.getAsJsonObject(), new TypeToken<Map<String, Object>>() {}.getType());
                 }
             }
         }
@@ -485,7 +482,7 @@ public class JSONRPCUtils {
         }
 
         // Extract field name if present in error message - check common prefixes
-        String[] prefixes = {"Cannot find field: ", "Invalid value for", "Invalid enum value:", "Failed to parse"};
+        String[] prefixes = {"Cannot find field: ", "Invalid value for", "Invalid enum value:", "Failed to parse", "Expect "};
         for (String prefix : prefixes) {
             if (message.contains(prefix)) {
                 return new InvalidParamsJsonMappingException(ERROR_MESSAGE.formatted(message.substring(message.indexOf(prefix) + prefix.length())), id);
@@ -572,7 +569,7 @@ public class JSONRPCUtils {
                 output.name("method").value(method);
             }
             if (payload != null) {
-                String resultValue = JsonFormat.printer().alwaysPrintFieldsWithNoPresence().omittingInsignificantWhitespace().print(payload);
+                String resultValue = JsonFormat.printer().includingDefaultValueFields().omittingInsignificantWhitespace().print(payload);
                 output.name("params").jsonValue(resultValue);
             }
             output.endObject();
@@ -589,7 +586,7 @@ public class JSONRPCUtils {
             output.beginObject();
             output.name("jsonrpc").value("2.0");
             JsonUtil.writeJsonRpcId(output, requestId);
-            String resultValue = JsonFormat.printer().alwaysPrintFieldsWithNoPresence().omittingInsignificantWhitespace().print(builder);
+            String resultValue = JsonFormat.printer().includingDefaultValueFields().omittingInsignificantWhitespace().print(builder);
             output.name("result").jsonValue(resultValue);
             output.endObject();
             return result.toString();

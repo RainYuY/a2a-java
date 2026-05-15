@@ -163,9 +163,9 @@ public class ToProtoTest {
         assertEquals("11", result.getArtifacts(0).getArtifactId());
         assertEquals("artefact", result.getArtifacts(0).getName());
         assertEquals(1, result.getArtifacts(0).getPartsCount());
-        assertEquals(true, result.getArtifacts(0).getParts(0).hasText());
-        assertEquals(false, result.getArtifacts(0).getParts(0).hasRaw());
-        assertEquals(false, result.getArtifacts(0).getParts(0).hasUrl());
+        assertEquals(true, result.getArtifacts(0).getParts(0).getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.TEXT);
+        assertEquals(false, result.getArtifacts(0).getParts(0).getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.RAW);
+        assertEquals(false, result.getArtifacts(0).getParts(0).getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.URL);
         assertEquals(false, result.getArtifacts(0).getParts(0).hasData());
         assertEquals("text", result.getArtifacts(0).getParts(0).getText());
         assertEquals(1, result.getHistoryCount());
@@ -174,8 +174,8 @@ public class ToProtoTest {
         assertEquals(ROLE_USER, result.getHistory(0).getRole());
         assertEquals(1, result.getHistory(0).getPartsCount());
         assertEquals("tell me a joke", result.getHistory(0).getParts(0).getText());
-        assertEquals(false, result.getHistory(0).getParts(0).hasRaw());
-        assertEquals(false, result.getHistory(0).getParts(0).hasUrl());
+        assertEquals(false, result.getHistory(0).getParts(0).getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.RAW);
+        assertEquals(false, result.getHistory(0).getParts(0).getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.URL);
         assertEquals(false, result.getHistory(0).getParts(0).hasData());
     }
 
@@ -187,8 +187,8 @@ public class ToProtoTest {
         assertEquals(ROLE_USER, result.getRole());
         assertEquals(1, result.getPartsCount());
         assertEquals("tell me a joke", result.getParts(0).getText());
-        assertEquals(false, result.getParts(0).hasRaw());
-        assertEquals(false, result.getParts(0).hasUrl());
+        assertEquals(false, result.getParts(0).getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.RAW);
+        assertEquals(false, result.getParts(0).getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.URL);
         assertEquals(false, result.getParts(0).hasData());
         Message message = Message.builder()
                 .role(Message.Role.ROLE_AGENT)
@@ -201,8 +201,8 @@ public class ToProtoTest {
         assertEquals(ROLE_AGENT, result.getRole());
         assertEquals(1, result.getPartsCount());
         assertEquals("tell me a joke", result.getParts(0).getText());
-        assertEquals(false, result.getParts(0).hasRaw());
-        assertEquals(false, result.getParts(0).hasUrl());
+        assertEquals(false, result.getParts(0).getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.RAW);
+        assertEquals(false, result.getParts(0).getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.URL);
         assertEquals(false, result.getParts(0).hasData());
     }
 

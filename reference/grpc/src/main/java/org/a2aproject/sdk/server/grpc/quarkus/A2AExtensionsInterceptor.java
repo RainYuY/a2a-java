@@ -103,14 +103,17 @@ public class A2AExtensionsInterceptor implements ServerInterceptor {
         // Extract A2A extensions header
         String extensions = metadata.get(EXTENSIONS_KEY);
 
+        String fullMethodName = serverCall.getMethodDescriptor().getFullMethodName();
+        String bareMethodName = fullMethodName.substring(fullMethodName.lastIndexOf('/') + 1);
+
         // Create enhanced context with rich information (equivalent to Python's ServicerContext)
         Context context = Context.current()
                 // Store complete metadata for full header access
                 .withValue(GrpcContextKeys.METADATA_KEY, metadata)
-                // Store Grpc method name 
-                .withValue(GrpcContextKeys.GRPC_METHOD_NAME_KEY, serverCall.getMethodDescriptor().getFullMethodName())
+                // Store Grpc method name
+                .withValue(GrpcContextKeys.GRPC_METHOD_NAME_KEY, fullMethodName)
                 // Store method name (equivalent to Python's context.method())
-                .withValue(GrpcContextKeys.METHOD_NAME_KEY, GrpcContextKeys.METHOD_MAPPING.get(serverCall.getMethodDescriptor().getBareMethodName()))
+                .withValue(GrpcContextKeys.METHOD_NAME_KEY, GrpcContextKeys.METHOD_MAPPING.get(bareMethodName))
                 // Store peer information for client connection details
                 .withValue(GrpcContextKeys.PEER_INFO_KEY, getPeerInfo(serverCall));
 

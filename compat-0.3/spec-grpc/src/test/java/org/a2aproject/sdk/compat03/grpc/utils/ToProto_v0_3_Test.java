@@ -155,7 +155,7 @@ public class ToProto_v0_3_Test {
         assertEquals("11", result.getArtifacts(0).getArtifactId());
         assertEquals("artefact", result.getArtifacts(0).getName());
         assertEquals(1, result.getArtifacts(0).getPartsCount());
-        assertEquals(true, result.getArtifacts(0).getParts(0).hasText());
+        assertEquals(true, result.getArtifacts(0).getParts(0).getPartCase() == org.a2aproject.sdk.compat03.grpc.Part.PartCase.TEXT);
         assertEquals(false, result.getArtifacts(0).getParts(0).hasFile());
         assertEquals(false, result.getArtifacts(0).getParts(0).hasData());
         assertEquals("text", result.getArtifacts(0).getParts(0).getText());

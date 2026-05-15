@@ -661,7 +661,7 @@ public class RestHandlerTest extends AbstractA2ARequestHandlerTest {
                 if (body.has("error")) {
                     JsonObject error = body.getAsJsonObject("error");
                     var details = error.has("details") ? error.getAsJsonArray("details") : null;
-                    if (details != null && !details.isEmpty()) {
+                    if (details != null && details.size() > 0) {
                         String reason = details.get(0).getAsJsonObject().get("reason").getAsString();
                         if ("EXTENSION_SUPPORT_REQUIRED".equals(reason) &&
                             item.contains("https://example.com/streaming-extension")) {
@@ -871,7 +871,7 @@ public class RestHandlerTest extends AbstractA2ARequestHandlerTest {
                 if (body.has("error")) {
                     JsonObject error = body.getAsJsonObject("error");
                     var details = error.has("details") ? error.getAsJsonArray("details") : null;
-                    if (details != null && !details.isEmpty()) {
+                    if (details != null && details.size() > 0) {
                         String reason = details.get(0).getAsJsonObject().get("reason").getAsString();
                         if ("VERSION_NOT_SUPPORTED".equals(reason) &&
                             error.has("message") && error.get("message").getAsString().contains("2.0")) {
@@ -1089,7 +1089,7 @@ public class RestHandlerTest extends AbstractA2ARequestHandlerTest {
         Assertions.assertTrue(error.has("status"), "status field should be present");
         Assertions.assertTrue(error.has("details"), "details field should be present");
         var details = error.getAsJsonArray("details");
-        Assertions.assertFalse(details.isEmpty(), "details array should not be empty");
+        Assertions.assertFalse(details.size() == 0, "details array should not be empty");
         JsonObject detail = details.get(0).getAsJsonObject();
         Assertions.assertEquals("type.googleapis.com/google.rpc.ErrorInfo", detail.get("@type").getAsString(), "@type field mismatch");
         Assertions.assertEquals(expectedReason, detail.get("reason").getAsString(), "reason field mismatch");

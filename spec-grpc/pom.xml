@@ -94,27 +94,26 @@
         <plugins>
             <!-- Protocol Buffers Compiler Plugin -->
             <plugin>
-                <groupId>io.github.ascopes</groupId>
+                <groupId>org.xolstice.maven.plugins</groupId>
                 <artifactId>protobuf-maven-plugin</artifactId>
-                <version>4.1.2</version>
+                <version>${protobuf-maven-plugin.version}</version>
                 <configuration>
                     <skip>${skip.protobuf.generate}</skip>
-                    <cleanOutputDirectories>true</cleanOutputDirectories>
-                    <protoc>${protobuf-java.version}</protoc>
+                    <protocArtifact>com.google.protobuf:protoc:${protobuf-java.version}:exe:osx-x86_64</protocArtifact>
                     <outputDirectory>${project.basedir}/src/main/java/</outputDirectory>
-                    <binaryMavenPlugins>
-                        <binaryMavenPlugin>
-                            <groupId>io.grpc</groupId>
-                            <artifactId>protoc-gen-grpc-java</artifactId>
-                            <version>${grpc.version}</version>
-                        </binaryMavenPlugin>
-                    </binaryMavenPlugins>
+                    <clearOutputDirectory>false</clearOutputDirectory>
+                    <pluginId>grpc-java</pluginId>
+                    <pluginArtifact>io.grpc:protoc-gen-grpc-java:${grpc.version}:exe:osx-x86_64</pluginArtifact>
+                    <protocVersion>${protobuf-java.version}</protocVersion>
+                    <additionalProtoPathElements/>
+                    <protocParameters>--experimental_allow_proto3_optional</protocParameters>
                 </configuration>
                 <executions>
                     <execution>
                         <phase>generate-sources</phase>
                         <goals>
-                            <goal>generate</goal>
+                            <goal>compile</goal>
+                            <goal>compile-custom</goal>
                         </goals>
                     </execution>
                 </executions>

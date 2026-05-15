@@ -3,8 +3,8 @@ package org.a2aproject.sdk.spec;
 
 import com.google.gson.Gson;
 import com.google.gson.GsonBuilder;
+import com.google.gson.JsonDeserializer;
 import com.google.gson.JsonSyntaxException;
-import com.google.gson.ToNumberPolicy;
 import org.a2aproject.sdk.util.Assert;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
@@ -134,6 +134,12 @@ public record DataPart(Object data, @Nullable Map<String, Object> metadata) impl
     }
 
     private static final Gson JSON_PARSER = new GsonBuilder()
-            .setObjectToNumberStrategy(ToNumberPolicy.LONG_OR_DOUBLE)
+            .registerTypeAdapter(Number.class, (JsonDeserializer<Number>) (json, typeOfT, context) -> {
+                double d = json.getAsDouble();
+                if (d == Math.floor(d) && !Double.isInfinite(d) && Math.abs(d) < Long.MAX_VALUE) {
+                    return (long) d;
+                }
+                return d;
+            })
             .create();
 }

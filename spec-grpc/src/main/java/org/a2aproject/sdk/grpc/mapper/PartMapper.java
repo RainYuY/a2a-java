@@ -90,15 +90,15 @@ public interface PartMapper {
             return null;
         }
         Map<String, Object> metadata = A2ACommonFieldMapper.INSTANCE.metadataFromProto(proto.getMetadata());
-        if (proto.hasText()) {
+        if (proto.getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.TEXT) {
             return new TextPart(proto.getText(), metadata);
-        } else if (proto.hasRaw()) {
+        } else if (proto.getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.RAW) {
             // raw bytes → FilePart(FileWithBytes)
             String bytes = Base64.getEncoder().encodeToString(proto.getRaw().toByteArray());
             String mimeType = proto.getMediaType().isEmpty() ? "" : proto.getMediaType();
             String name = proto.getFilename().isEmpty() ? "" : proto.getFilename();
             return new FilePart(new FileWithBytes(mimeType, name, bytes), metadata);
-        } else if (proto.hasUrl()) {
+        } else if (proto.getContentCase() == org.a2aproject.sdk.grpc.Part.ContentCase.URL) {
             // url → FilePart(FileWithUri)
             String uri = proto.getUrl();
             String mimeType = proto.getMediaType().isEmpty() ? null : proto.getMediaType();

@@ -1,18 +1,33 @@
 package org.a2aproject.sdk.grpc;
 
 import static io.grpc.MethodDescriptor.generateFullMethodName;
+import static io.grpc.stub.ClientCalls.asyncBidiStreamingCall;
+import static io.grpc.stub.ClientCalls.asyncClientStreamingCall;
+import static io.grpc.stub.ClientCalls.asyncServerStreamingCall;
+import static io.grpc.stub.ClientCalls.asyncUnaryCall;
+import static io.grpc.stub.ClientCalls.blockingServerStreamingCall;
+import static io.grpc.stub.ClientCalls.blockingUnaryCall;
+import static io.grpc.stub.ClientCalls.futureUnaryCall;
+import static io.grpc.stub.ServerCalls.asyncBidiStreamingCall;
+import static io.grpc.stub.ServerCalls.asyncClientStreamingCall;
+import static io.grpc.stub.ServerCalls.asyncServerStreamingCall;
+import static io.grpc.stub.ServerCalls.asyncUnaryCall;
+import static io.grpc.stub.ServerCalls.asyncUnimplementedStreamingCall;
+import static io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall;
 
 /**
  * <pre>
  * Provides operations for interacting with agents using the A2A protocol.
  * </pre>
  */
-@io.grpc.stub.annotations.GrpcGenerated
+@javax.annotation.Generated(
+    value = "by gRPC proto compiler (version 1.30.1)",
+    comments = "Source: a2a.proto")
 public final class A2AServiceGrpc {
 
   private A2AServiceGrpc() {}
 
-  public static final java.lang.String SERVICE_NAME = "lf.a2a.v1.A2AService";
+  public static final String SERVICE_NAME = "lf.a2a.v1.A2AService";
 
   // Static method descriptors that strictly reflect the proto.
   private static volatile io.grpc.MethodDescriptor<org.a2aproject.sdk.grpc.SendMessageRequest,
@@ -371,21 +386,6 @@ public final class A2AServiceGrpc {
   }
 
   /**
-   * Creates a new blocking-style stub that supports all types of calls on the service
-   */
-  public static A2AServiceBlockingV2Stub newBlockingV2Stub(
-      io.grpc.Channel channel) {
-    io.grpc.stub.AbstractStub.StubFactory<A2AServiceBlockingV2Stub> factory =
-      new io.grpc.stub.AbstractStub.StubFactory<A2AServiceBlockingV2Stub>() {
-        @java.lang.Override
-        public A2AServiceBlockingV2Stub newStub(io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
-          return new A2AServiceBlockingV2Stub(channel, callOptions);
-        }
-      };
-    return A2AServiceBlockingV2Stub.newStub(factory, channel);
-  }
-
-  /**
    * Creates a new blocking-style stub that supports unary and streaming output calls on the service
    */
   public static A2AServiceBlockingStub newBlockingStub(
@@ -420,16 +420,16 @@ public final class A2AServiceGrpc {
    * Provides operations for interacting with agents using the A2A protocol.
    * </pre>
    */
-  public interface AsyncService {
+  public static abstract class A2AServiceImplBase implements io.grpc.BindableService {
 
     /**
      * <pre>
      * Sends a message to an agent.
      * </pre>
      */
-    default void sendMessage(org.a2aproject.sdk.grpc.SendMessageRequest request,
+    public void sendMessage(org.a2aproject.sdk.grpc.SendMessageRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.SendMessageResponse> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getSendMessageMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getSendMessageMethod(), responseObserver);
     }
 
     /**
@@ -438,9 +438,9 @@ public final class A2AServiceGrpc {
      * Streaming version of `SendMessage`
      * </pre>
      */
-    default void sendStreamingMessage(org.a2aproject.sdk.grpc.SendMessageRequest request,
+    public void sendStreamingMessage(org.a2aproject.sdk.grpc.SendMessageRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.StreamResponse> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getSendStreamingMessageMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getSendStreamingMessageMethod(), responseObserver);
     }
 
     /**
@@ -448,9 +448,9 @@ public final class A2AServiceGrpc {
      * Gets the latest state of a task.
      * </pre>
      */
-    default void getTask(org.a2aproject.sdk.grpc.GetTaskRequest request,
+    public void getTask(org.a2aproject.sdk.grpc.GetTaskRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.Task> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getGetTaskMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getGetTaskMethod(), responseObserver);
     }
 
     /**
@@ -458,9 +458,9 @@ public final class A2AServiceGrpc {
      * Lists tasks that match the specified filter.
      * </pre>
      */
-    default void listTasks(org.a2aproject.sdk.grpc.ListTasksRequest request,
+    public void listTasks(org.a2aproject.sdk.grpc.ListTasksRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.ListTasksResponse> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getListTasksMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getListTasksMethod(), responseObserver);
     }
 
     /**
@@ -468,9 +468,9 @@ public final class A2AServiceGrpc {
      * Cancels a task in progress.
      * </pre>
      */
-    default void cancelTask(org.a2aproject.sdk.grpc.CancelTaskRequest request,
+    public void cancelTask(org.a2aproject.sdk.grpc.CancelTaskRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.Task> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getCancelTaskMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getCancelTaskMethod(), responseObserver);
     }
 
     /**
@@ -479,9 +479,9 @@ public final class A2AServiceGrpc {
      * Returns `UnsupportedOperationError` if the task is already in a terminal state (completed, failed, canceled, rejected).
      * </pre>
      */
-    default void subscribeToTask(org.a2aproject.sdk.grpc.SubscribeToTaskRequest request,
+    public void subscribeToTask(org.a2aproject.sdk.grpc.SubscribeToTaskRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.StreamResponse> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getSubscribeToTaskMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getSubscribeToTaskMethod(), responseObserver);
     }
 
     /**
@@ -493,9 +493,9 @@ public final class A2AServiceGrpc {
      * Creates a push notification config for a task.
      * </pre>
      */
-    default void createTaskPushNotificationConfig(org.a2aproject.sdk.grpc.TaskPushNotificationConfig request,
+    public void createTaskPushNotificationConfig(org.a2aproject.sdk.grpc.TaskPushNotificationConfig request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.TaskPushNotificationConfig> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getCreateTaskPushNotificationConfigMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getCreateTaskPushNotificationConfigMethod(), responseObserver);
     }
 
     /**
@@ -503,9 +503,9 @@ public final class A2AServiceGrpc {
      * Gets a push notification config for a task.
      * </pre>
      */
-    default void getTaskPushNotificationConfig(org.a2aproject.sdk.grpc.GetTaskPushNotificationConfigRequest request,
+    public void getTaskPushNotificationConfig(org.a2aproject.sdk.grpc.GetTaskPushNotificationConfigRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.TaskPushNotificationConfig> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getGetTaskPushNotificationConfigMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getGetTaskPushNotificationConfigMethod(), responseObserver);
     }
 
     /**
@@ -513,9 +513,9 @@ public final class A2AServiceGrpc {
      * Get a list of push notifications configured for a task.
      * </pre>
      */
-    default void listTaskPushNotificationConfigs(org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsRequest request,
+    public void listTaskPushNotificationConfigs(org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsResponse> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getListTaskPushNotificationConfigsMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getListTaskPushNotificationConfigsMethod(), responseObserver);
     }
 
     /**
@@ -523,9 +523,9 @@ public final class A2AServiceGrpc {
      * Gets the extended agent card for the authenticated agent.
      * </pre>
      */
-    default void getExtendedAgentCard(org.a2aproject.sdk.grpc.GetExtendedAgentCardRequest request,
+    public void getExtendedAgentCard(org.a2aproject.sdk.grpc.GetExtendedAgentCardRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.AgentCard> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getGetExtendedAgentCardMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getGetExtendedAgentCardMethod(), responseObserver);
     }
 
     /**
@@ -533,34 +533,100 @@ public final class A2AServiceGrpc {
      * Deletes a push notification config for a task.
      * </pre>
      */
-    default void deleteTaskPushNotificationConfig(org.a2aproject.sdk.grpc.DeleteTaskPushNotificationConfigRequest request,
+    public void deleteTaskPushNotificationConfig(org.a2aproject.sdk.grpc.DeleteTaskPushNotificationConfigRequest request,
         io.grpc.stub.StreamObserver<com.google.protobuf.Empty> responseObserver) {
-      io.grpc.stub.ServerCalls.asyncUnimplementedUnaryCall(getDeleteTaskPushNotificationConfigMethod(), responseObserver);
+      asyncUnimplementedUnaryCall(getDeleteTaskPushNotificationConfigMethod(), responseObserver);
     }
-  }
-
-  /**
-   * Base class for the server implementation of the service A2AService.
-   * <pre>
-   * Provides operations for interacting with agents using the A2A protocol.
-   * </pre>
-   */
-  public static abstract class A2AServiceImplBase
-      implements io.grpc.BindableService, AsyncService {
 
     @java.lang.Override public final io.grpc.ServerServiceDefinition bindService() {
-      return A2AServiceGrpc.bindService(this);
+      return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
+          .addMethod(
+            getSendMessageMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                org.a2aproject.sdk.grpc.SendMessageRequest,
+                org.a2aproject.sdk.grpc.SendMessageResponse>(
+                  this, METHODID_SEND_MESSAGE)))
+          .addMethod(
+            getSendStreamingMessageMethod(),
+            asyncServerStreamingCall(
+              new MethodHandlers<
+                org.a2aproject.sdk.grpc.SendMessageRequest,
+                org.a2aproject.sdk.grpc.StreamResponse>(
+                  this, METHODID_SEND_STREAMING_MESSAGE)))
+          .addMethod(
+            getGetTaskMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                org.a2aproject.sdk.grpc.GetTaskRequest,
+                org.a2aproject.sdk.grpc.Task>(
+                  this, METHODID_GET_TASK)))
+          .addMethod(
+            getListTasksMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                org.a2aproject.sdk.grpc.ListTasksRequest,
+                org.a2aproject.sdk.grpc.ListTasksResponse>(
+                  this, METHODID_LIST_TASKS)))
+          .addMethod(
+            getCancelTaskMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                org.a2aproject.sdk.grpc.CancelTaskRequest,
+                org.a2aproject.sdk.grpc.Task>(
+                  this, METHODID_CANCEL_TASK)))
+          .addMethod(
+            getSubscribeToTaskMethod(),
+            asyncServerStreamingCall(
+              new MethodHandlers<
+                org.a2aproject.sdk.grpc.SubscribeToTaskRequest,
+                org.a2aproject.sdk.grpc.StreamResponse>(
+                  this, METHODID_SUBSCRIBE_TO_TASK)))
+          .addMethod(
+            getCreateTaskPushNotificationConfigMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                org.a2aproject.sdk.grpc.TaskPushNotificationConfig,
+                org.a2aproject.sdk.grpc.TaskPushNotificationConfig>(
+                  this, METHODID_CREATE_TASK_PUSH_NOTIFICATION_CONFIG)))
+          .addMethod(
+            getGetTaskPushNotificationConfigMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                org.a2aproject.sdk.grpc.GetTaskPushNotificationConfigRequest,
+                org.a2aproject.sdk.grpc.TaskPushNotificationConfig>(
+                  this, METHODID_GET_TASK_PUSH_NOTIFICATION_CONFIG)))
+          .addMethod(
+            getListTaskPushNotificationConfigsMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsRequest,
+                org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsResponse>(
+                  this, METHODID_LIST_TASK_PUSH_NOTIFICATION_CONFIGS)))
+          .addMethod(
+            getGetExtendedAgentCardMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                org.a2aproject.sdk.grpc.GetExtendedAgentCardRequest,
+                org.a2aproject.sdk.grpc.AgentCard>(
+                  this, METHODID_GET_EXTENDED_AGENT_CARD)))
+          .addMethod(
+            getDeleteTaskPushNotificationConfigMethod(),
+            asyncUnaryCall(
+              new MethodHandlers<
+                org.a2aproject.sdk.grpc.DeleteTaskPushNotificationConfigRequest,
+                com.google.protobuf.Empty>(
+                  this, METHODID_DELETE_TASK_PUSH_NOTIFICATION_CONFIG)))
+          .build();
     }
   }
 
   /**
-   * A stub to allow clients to do asynchronous rpc calls to service A2AService.
    * <pre>
    * Provides operations for interacting with agents using the A2A protocol.
    * </pre>
    */
-  public static final class A2AServiceStub
-      extends io.grpc.stub.AbstractAsyncStub<A2AServiceStub> {
+  public static final class A2AServiceStub extends io.grpc.stub.AbstractAsyncStub<A2AServiceStub> {
     private A2AServiceStub(
         io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
       super(channel, callOptions);
@@ -579,7 +645,7 @@ public final class A2AServiceGrpc {
      */
     public void sendMessage(org.a2aproject.sdk.grpc.SendMessageRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.SendMessageResponse> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
+      asyncUnaryCall(
           getChannel().newCall(getSendMessageMethod(), getCallOptions()), request, responseObserver);
     }
 
@@ -591,7 +657,7 @@ public final class A2AServiceGrpc {
      */
     public void sendStreamingMessage(org.a2aproject.sdk.grpc.SendMessageRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.StreamResponse> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncServerStreamingCall(
+      asyncServerStreamingCall(
           getChannel().newCall(getSendStreamingMessageMethod(), getCallOptions()), request, responseObserver);
     }
 
@@ -602,7 +668,7 @@ public final class A2AServiceGrpc {
      */
     public void getTask(org.a2aproject.sdk.grpc.GetTaskRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.Task> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
+      asyncUnaryCall(
           getChannel().newCall(getGetTaskMethod(), getCallOptions()), request, responseObserver);
     }
 
@@ -613,7 +679,7 @@ public final class A2AServiceGrpc {
      */
     public void listTasks(org.a2aproject.sdk.grpc.ListTasksRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.ListTasksResponse> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
+      asyncUnaryCall(
           getChannel().newCall(getListTasksMethod(), getCallOptions()), request, responseObserver);
     }
 
@@ -624,7 +690,7 @@ public final class A2AServiceGrpc {
      */
     public void cancelTask(org.a2aproject.sdk.grpc.CancelTaskRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.Task> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
+      asyncUnaryCall(
           getChannel().newCall(getCancelTaskMethod(), getCallOptions()), request, responseObserver);
     }
 
@@ -636,7 +702,7 @@ public final class A2AServiceGrpc {
      */
     public void subscribeToTask(org.a2aproject.sdk.grpc.SubscribeToTaskRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.StreamResponse> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncServerStreamingCall(
+      asyncServerStreamingCall(
           getChannel().newCall(getSubscribeToTaskMethod(), getCallOptions()), request, responseObserver);
     }
 
@@ -651,7 +717,7 @@ public final class A2AServiceGrpc {
      */
     public void createTaskPushNotificationConfig(org.a2aproject.sdk.grpc.TaskPushNotificationConfig request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.TaskPushNotificationConfig> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
+      asyncUnaryCall(
           getChannel().newCall(getCreateTaskPushNotificationConfigMethod(), getCallOptions()), request, responseObserver);
     }
 
@@ -662,7 +728,7 @@ public final class A2AServiceGrpc {
      */
     public void getTaskPushNotificationConfig(org.a2aproject.sdk.grpc.GetTaskPushNotificationConfigRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.TaskPushNotificationConfig> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
+      asyncUnaryCall(
           getChannel().newCall(getGetTaskPushNotificationConfigMethod(), getCallOptions()), request, responseObserver);
     }
 
@@ -673,7 +739,7 @@ public final class A2AServiceGrpc {
      */
     public void listTaskPushNotificationConfigs(org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsResponse> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
+      asyncUnaryCall(
           getChannel().newCall(getListTaskPushNotificationConfigsMethod(), getCallOptions()), request, responseObserver);
     }
 
@@ -684,7 +750,7 @@ public final class A2AServiceGrpc {
      */
     public void getExtendedAgentCard(org.a2aproject.sdk.grpc.GetExtendedAgentCardRequest request,
         io.grpc.stub.StreamObserver<org.a2aproject.sdk.grpc.AgentCard> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
+      asyncUnaryCall(
           getChannel().newCall(getGetExtendedAgentCardMethod(), getCallOptions()), request, responseObserver);
     }
 
@@ -695,159 +761,17 @@ public final class A2AServiceGrpc {
      */
     public void deleteTaskPushNotificationConfig(org.a2aproject.sdk.grpc.DeleteTaskPushNotificationConfigRequest request,
         io.grpc.stub.StreamObserver<com.google.protobuf.Empty> responseObserver) {
-      io.grpc.stub.ClientCalls.asyncUnaryCall(
+      asyncUnaryCall(
           getChannel().newCall(getDeleteTaskPushNotificationConfigMethod(), getCallOptions()), request, responseObserver);
     }
   }
 
   /**
-   * A stub to allow clients to do synchronous rpc calls to service A2AService.
    * <pre>
    * Provides operations for interacting with agents using the A2A protocol.
    * </pre>
    */
-  public static final class A2AServiceBlockingV2Stub
-      extends io.grpc.stub.AbstractBlockingStub<A2AServiceBlockingV2Stub> {
-    private A2AServiceBlockingV2Stub(
-        io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
-      super(channel, callOptions);
-    }
-
-    @java.lang.Override
-    protected A2AServiceBlockingV2Stub build(
-        io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
-      return new A2AServiceBlockingV2Stub(channel, callOptions);
-    }
-
-    /**
-     * <pre>
-     * Sends a message to an agent.
-     * </pre>
-     */
-    public org.a2aproject.sdk.grpc.SendMessageResponse sendMessage(org.a2aproject.sdk.grpc.SendMessageRequest request) throws io.grpc.StatusException {
-      return io.grpc.stub.ClientCalls.blockingV2UnaryCall(
-          getChannel(), getSendMessageMethod(), getCallOptions(), request);
-    }
-
-    /**
-     * <pre>
-     * Sends a streaming message to an agent, allowing for real-time interaction and status updates.
-     * Streaming version of `SendMessage`
-     * </pre>
-     */
-    @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/10918")
-    public io.grpc.stub.BlockingClientCall<?, org.a2aproject.sdk.grpc.StreamResponse>
-        sendStreamingMessage(org.a2aproject.sdk.grpc.SendMessageRequest request) {
-      return io.grpc.stub.ClientCalls.blockingV2ServerStreamingCall(
-          getChannel(), getSendStreamingMessageMethod(), getCallOptions(), request);
-    }
-
-    /**
-     * <pre>
-     * Gets the latest state of a task.
-     * </pre>
-     */
-    public org.a2aproject.sdk.grpc.Task getTask(org.a2aproject.sdk.grpc.GetTaskRequest request) throws io.grpc.StatusException {
-      return io.grpc.stub.ClientCalls.blockingV2UnaryCall(
-          getChannel(), getGetTaskMethod(), getCallOptions(), request);
-    }
-
-    /**
-     * <pre>
-     * Lists tasks that match the specified filter.
-     * </pre>
-     */
-    public org.a2aproject.sdk.grpc.ListTasksResponse listTasks(org.a2aproject.sdk.grpc.ListTasksRequest request) throws io.grpc.StatusException {
-      return io.grpc.stub.ClientCalls.blockingV2UnaryCall(
-          getChannel(), getListTasksMethod(), getCallOptions(), request);
-    }
-
-    /**
-     * <pre>
-     * Cancels a task in progress.
-     * </pre>
-     */
-    public org.a2aproject.sdk.grpc.Task cancelTask(org.a2aproject.sdk.grpc.CancelTaskRequest request) throws io.grpc.StatusException {
-      return io.grpc.stub.ClientCalls.blockingV2UnaryCall(
-          getChannel(), getCancelTaskMethod(), getCallOptions(), request);
-    }
-
-    /**
-     * <pre>
-     * Subscribes to task updates for tasks not in a terminal state.
-     * Returns `UnsupportedOperationError` if the task is already in a terminal state (completed, failed, canceled, rejected).
-     * </pre>
-     */
-    @io.grpc.ExperimentalApi("https://github.com/grpc/grpc-java/issues/10918")
-    public io.grpc.stub.BlockingClientCall<?, org.a2aproject.sdk.grpc.StreamResponse>
-        subscribeToTask(org.a2aproject.sdk.grpc.SubscribeToTaskRequest request) {
-      return io.grpc.stub.ClientCalls.blockingV2ServerStreamingCall(
-          getChannel(), getSubscribeToTaskMethod(), getCallOptions(), request);
-    }
-
-    /**
-     * <pre>
-     * (-- api-linter: client-libraries::4232::required-fields=disabled
-     *     api-linter: core::0133::method-signature=disabled
-     *     api-linter: core::0133::request-message-name=disabled
-     *     aip.dev/not-precedent: method_signature preserved for backwards compatibility --)
-     * Creates a push notification config for a task.
-     * </pre>
-     */
-    public org.a2aproject.sdk.grpc.TaskPushNotificationConfig createTaskPushNotificationConfig(org.a2aproject.sdk.grpc.TaskPushNotificationConfig request) throws io.grpc.StatusException {
-      return io.grpc.stub.ClientCalls.blockingV2UnaryCall(
-          getChannel(), getCreateTaskPushNotificationConfigMethod(), getCallOptions(), request);
-    }
-
-    /**
-     * <pre>
-     * Gets a push notification config for a task.
-     * </pre>
-     */
-    public org.a2aproject.sdk.grpc.TaskPushNotificationConfig getTaskPushNotificationConfig(org.a2aproject.sdk.grpc.GetTaskPushNotificationConfigRequest request) throws io.grpc.StatusException {
-      return io.grpc.stub.ClientCalls.blockingV2UnaryCall(
-          getChannel(), getGetTaskPushNotificationConfigMethod(), getCallOptions(), request);
-    }
-
-    /**
-     * <pre>
-     * Get a list of push notifications configured for a task.
-     * </pre>
-     */
-    public org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsResponse listTaskPushNotificationConfigs(org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsRequest request) throws io.grpc.StatusException {
-      return io.grpc.stub.ClientCalls.blockingV2UnaryCall(
-          getChannel(), getListTaskPushNotificationConfigsMethod(), getCallOptions(), request);
-    }
-
-    /**
-     * <pre>
-     * Gets the extended agent card for the authenticated agent.
-     * </pre>
-     */
-    public org.a2aproject.sdk.grpc.AgentCard getExtendedAgentCard(org.a2aproject.sdk.grpc.GetExtendedAgentCardRequest request) throws io.grpc.StatusException {
-      return io.grpc.stub.ClientCalls.blockingV2UnaryCall(
-          getChannel(), getGetExtendedAgentCardMethod(), getCallOptions(), request);
-    }
-
-    /**
-     * <pre>
-     * Deletes a push notification config for a task.
-     * </pre>
-     */
-    public com.google.protobuf.Empty deleteTaskPushNotificationConfig(org.a2aproject.sdk.grpc.DeleteTaskPushNotificationConfigRequest request) throws io.grpc.StatusException {
-      return io.grpc.stub.ClientCalls.blockingV2UnaryCall(
-          getChannel(), getDeleteTaskPushNotificationConfigMethod(), getCallOptions(), request);
-    }
-  }
-
-  /**
-   * A stub to allow clients to do limited synchronous rpc calls to service A2AService.
-   * <pre>
-   * Provides operations for interacting with agents using the A2A protocol.
-   * </pre>
-   */
-  public static final class A2AServiceBlockingStub
-      extends io.grpc.stub.AbstractBlockingStub<A2AServiceBlockingStub> {
+  public static final class A2AServiceBlockingStub extends io.grpc.stub.AbstractBlockingStub<A2AServiceBlockingStub> {
     private A2AServiceBlockingStub(
         io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
       super(channel, callOptions);
@@ -865,7 +789,7 @@ public final class A2AServiceGrpc {
      * </pre>
      */
     public org.a2aproject.sdk.grpc.SendMessageResponse sendMessage(org.a2aproject.sdk.grpc.SendMessageRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+      return blockingUnaryCall(
           getChannel(), getSendMessageMethod(), getCallOptions(), request);
     }
 
@@ -877,7 +801,7 @@ public final class A2AServiceGrpc {
      */
     public java.util.Iterator<org.a2aproject.sdk.grpc.StreamResponse> sendStreamingMessage(
         org.a2aproject.sdk.grpc.SendMessageRequest request) {
-      return io.grpc.stub.ClientCalls.blockingServerStreamingCall(
+      return blockingServerStreamingCall(
           getChannel(), getSendStreamingMessageMethod(), getCallOptions(), request);
     }
 
@@ -887,7 +811,7 @@ public final class A2AServiceGrpc {
      * </pre>
      */
     public org.a2aproject.sdk.grpc.Task getTask(org.a2aproject.sdk.grpc.GetTaskRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+      return blockingUnaryCall(
           getChannel(), getGetTaskMethod(), getCallOptions(), request);
     }
 
@@ -897,7 +821,7 @@ public final class A2AServiceGrpc {
      * </pre>
      */
     public org.a2aproject.sdk.grpc.ListTasksResponse listTasks(org.a2aproject.sdk.grpc.ListTasksRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+      return blockingUnaryCall(
           getChannel(), getListTasksMethod(), getCallOptions(), request);
     }
 
@@ -907,7 +831,7 @@ public final class A2AServiceGrpc {
      * </pre>
      */
     public org.a2aproject.sdk.grpc.Task cancelTask(org.a2aproject.sdk.grpc.CancelTaskRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+      return blockingUnaryCall(
           getChannel(), getCancelTaskMethod(), getCallOptions(), request);
     }
 
@@ -919,7 +843,7 @@ public final class A2AServiceGrpc {
      */
     public java.util.Iterator<org.a2aproject.sdk.grpc.StreamResponse> subscribeToTask(
         org.a2aproject.sdk.grpc.SubscribeToTaskRequest request) {
-      return io.grpc.stub.ClientCalls.blockingServerStreamingCall(
+      return blockingServerStreamingCall(
           getChannel(), getSubscribeToTaskMethod(), getCallOptions(), request);
     }
 
@@ -933,7 +857,7 @@ public final class A2AServiceGrpc {
      * </pre>
      */
     public org.a2aproject.sdk.grpc.TaskPushNotificationConfig createTaskPushNotificationConfig(org.a2aproject.sdk.grpc.TaskPushNotificationConfig request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+      return blockingUnaryCall(
           getChannel(), getCreateTaskPushNotificationConfigMethod(), getCallOptions(), request);
     }
 
@@ -943,7 +867,7 @@ public final class A2AServiceGrpc {
      * </pre>
      */
     public org.a2aproject.sdk.grpc.TaskPushNotificationConfig getTaskPushNotificationConfig(org.a2aproject.sdk.grpc.GetTaskPushNotificationConfigRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+      return blockingUnaryCall(
           getChannel(), getGetTaskPushNotificationConfigMethod(), getCallOptions(), request);
     }
 
@@ -953,7 +877,7 @@ public final class A2AServiceGrpc {
      * </pre>
      */
     public org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsResponse listTaskPushNotificationConfigs(org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+      return blockingUnaryCall(
           getChannel(), getListTaskPushNotificationConfigsMethod(), getCallOptions(), request);
     }
 
@@ -963,7 +887,7 @@ public final class A2AServiceGrpc {
      * </pre>
      */
     public org.a2aproject.sdk.grpc.AgentCard getExtendedAgentCard(org.a2aproject.sdk.grpc.GetExtendedAgentCardRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+      return blockingUnaryCall(
           getChannel(), getGetExtendedAgentCardMethod(), getCallOptions(), request);
     }
 
@@ -973,19 +897,17 @@ public final class A2AServiceGrpc {
      * </pre>
      */
     public com.google.protobuf.Empty deleteTaskPushNotificationConfig(org.a2aproject.sdk.grpc.DeleteTaskPushNotificationConfigRequest request) {
-      return io.grpc.stub.ClientCalls.blockingUnaryCall(
+      return blockingUnaryCall(
           getChannel(), getDeleteTaskPushNotificationConfigMethod(), getCallOptions(), request);
     }
   }
 
   /**
-   * A stub to allow clients to do ListenableFuture-style rpc calls to service A2AService.
    * <pre>
    * Provides operations for interacting with agents using the A2A protocol.
    * </pre>
    */
-  public static final class A2AServiceFutureStub
-      extends io.grpc.stub.AbstractFutureStub<A2AServiceFutureStub> {
+  public static final class A2AServiceFutureStub extends io.grpc.stub.AbstractFutureStub<A2AServiceFutureStub> {
     private A2AServiceFutureStub(
         io.grpc.Channel channel, io.grpc.CallOptions callOptions) {
       super(channel, callOptions);
@@ -1004,7 +926,7 @@ public final class A2AServiceGrpc {
      */
     public com.google.common.util.concurrent.ListenableFuture<org.a2aproject.sdk.grpc.SendMessageResponse> sendMessage(
         org.a2aproject.sdk.grpc.SendMessageRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
+      return futureUnaryCall(
           getChannel().newCall(getSendMessageMethod(), getCallOptions()), request);
     }
 
@@ -1015,7 +937,7 @@ public final class A2AServiceGrpc {
      */
     public com.google.common.util.concurrent.ListenableFuture<org.a2aproject.sdk.grpc.Task> getTask(
         org.a2aproject.sdk.grpc.GetTaskRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
+      return futureUnaryCall(
           getChannel().newCall(getGetTaskMethod(), getCallOptions()), request);
     }
 
@@ -1026,7 +948,7 @@ public final class A2AServiceGrpc {
      */
     public com.google.common.util.concurrent.ListenableFuture<org.a2aproject.sdk.grpc.ListTasksResponse> listTasks(
         org.a2aproject.sdk.grpc.ListTasksRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
+      return futureUnaryCall(
           getChannel().newCall(getListTasksMethod(), getCallOptions()), request);
     }
 
@@ -1037,7 +959,7 @@ public final class A2AServiceGrpc {
      */
     public com.google.common.util.concurrent.ListenableFuture<org.a2aproject.sdk.grpc.Task> cancelTask(
         org.a2aproject.sdk.grpc.CancelTaskRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
+      return futureUnaryCall(
           getChannel().newCall(getCancelTaskMethod(), getCallOptions()), request);
     }
 
@@ -1052,7 +974,7 @@ public final class A2AServiceGrpc {
      */
     public com.google.common.util.concurrent.ListenableFuture<org.a2aproject.sdk.grpc.TaskPushNotificationConfig> createTaskPushNotificationConfig(
         org.a2aproject.sdk.grpc.TaskPushNotificationConfig request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
+      return futureUnaryCall(
           getChannel().newCall(getCreateTaskPushNotificationConfigMethod(), getCallOptions()), request);
     }
 
@@ -1063,7 +985,7 @@ public final class A2AServiceGrpc {
      */
     public com.google.common.util.concurrent.ListenableFuture<org.a2aproject.sdk.grpc.TaskPushNotificationConfig> getTaskPushNotificationConfig(
         org.a2aproject.sdk.grpc.GetTaskPushNotificationConfigRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
+      return futureUnaryCall(
           getChannel().newCall(getGetTaskPushNotificationConfigMethod(), getCallOptions()), request);
     }
 
@@ -1074,7 +996,7 @@ public final class A2AServiceGrpc {
      */
     public com.google.common.util.concurrent.ListenableFuture<org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsResponse> listTaskPushNotificationConfigs(
         org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
+      return futureUnaryCall(
           getChannel().newCall(getListTaskPushNotificationConfigsMethod(), getCallOptions()), request);
     }
 
@@ -1085,7 +1007,7 @@ public final class A2AServiceGrpc {
      */
     public com.google.common.util.concurrent.ListenableFuture<org.a2aproject.sdk.grpc.AgentCard> getExtendedAgentCard(
         org.a2aproject.sdk.grpc.GetExtendedAgentCardRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
+      return futureUnaryCall(
           getChannel().newCall(getGetExtendedAgentCardMethod(), getCallOptions()), request);
     }
 
@@ -1096,7 +1018,7 @@ public final class A2AServiceGrpc {
      */
     public com.google.common.util.concurrent.ListenableFuture<com.google.protobuf.Empty> deleteTaskPushNotificationConfig(
         org.a2aproject.sdk.grpc.DeleteTaskPushNotificationConfigRequest request) {
-      return io.grpc.stub.ClientCalls.futureUnaryCall(
+      return futureUnaryCall(
           getChannel().newCall(getDeleteTaskPushNotificationConfigMethod(), getCallOptions()), request);
     }
   }
@@ -1118,10 +1040,10 @@ public final class A2AServiceGrpc {
       io.grpc.stub.ServerCalls.ServerStreamingMethod<Req, Resp>,
       io.grpc.stub.ServerCalls.ClientStreamingMethod<Req, Resp>,
       io.grpc.stub.ServerCalls.BidiStreamingMethod<Req, Resp> {
-    private final AsyncService serviceImpl;
+    private final A2AServiceImplBase serviceImpl;
     private final int methodId;
 
-    MethodHandlers(AsyncService serviceImpl, int methodId) {
+    MethodHandlers(A2AServiceImplBase serviceImpl, int methodId) {
       this.serviceImpl = serviceImpl;
       this.methodId = methodId;
     }
@@ -1190,88 +1112,6 @@ public final class A2AServiceGrpc {
     }
   }
 
-  public static final io.grpc.ServerServiceDefinition bindService(AsyncService service) {
-    return io.grpc.ServerServiceDefinition.builder(getServiceDescriptor())
-        .addMethod(
-          getSendMessageMethod(),
-          io.grpc.stub.ServerCalls.asyncUnaryCall(
-            new MethodHandlers<
-              org.a2aproject.sdk.grpc.SendMessageRequest,
-              org.a2aproject.sdk.grpc.SendMessageResponse>(
-                service, METHODID_SEND_MESSAGE)))
-        .addMethod(
-          getSendStreamingMessageMethod(),
-          io.grpc.stub.ServerCalls.asyncServerStreamingCall(
-            new MethodHandlers<
-              org.a2aproject.sdk.grpc.SendMessageRequest,
-              org.a2aproject.sdk.grpc.StreamResponse>(
-                service, METHODID_SEND_STREAMING_MESSAGE)))
-        .addMethod(
-          getGetTaskMethod(),
-          io.grpc.stub.ServerCalls.asyncUnaryCall(
-            new MethodHandlers<
-              org.a2aproject.sdk.grpc.GetTaskRequest,
-              org.a2aproject.sdk.grpc.Task>(
-                service, METHODID_GET_TASK)))
-        .addMethod(
-          getListTasksMethod(),
-          io.grpc.stub.ServerCalls.asyncUnaryCall(
-            new MethodHandlers<
-              org.a2aproject.sdk.grpc.ListTasksRequest,
-              org.a2aproject.sdk.grpc.ListTasksResponse>(
-                service, METHODID_LIST_TASKS)))
-        .addMethod(
-          getCancelTaskMethod(),
-          io.grpc.stub.ServerCalls.asyncUnaryCall(
-            new MethodHandlers<
-              org.a2aproject.sdk.grpc.CancelTaskRequest,
-              org.a2aproject.sdk.grpc.Task>(
-                service, METHODID_CANCEL_TASK)))
-        .addMethod(
-          getSubscribeToTaskMethod(),
-          io.grpc.stub.ServerCalls.asyncServerStreamingCall(
-            new MethodHandlers<
-              org.a2aproject.sdk.grpc.SubscribeToTaskRequest,
-              org.a2aproject.sdk.grpc.StreamResponse>(
-                service, METHODID_SUBSCRIBE_TO_TASK)))
-        .addMethod(
-          getCreateTaskPushNotificationConfigMethod(),
-          io.grpc.stub.ServerCalls.asyncUnaryCall(
-            new MethodHandlers<
-              org.a2aproject.sdk.grpc.TaskPushNotificationConfig,
-              org.a2aproject.sdk.grpc.TaskPushNotificationConfig>(
-                service, METHODID_CREATE_TASK_PUSH_NOTIFICATION_CONFIG)))
-        .addMethod(
-          getGetTaskPushNotificationConfigMethod(),
-          io.grpc.stub.ServerCalls.asyncUnaryCall(
-            new MethodHandlers<
-              org.a2aproject.sdk.grpc.GetTaskPushNotificationConfigRequest,
-              org.a2aproject.sdk.grpc.TaskPushNotificationConfig>(
-                service, METHODID_GET_TASK_PUSH_NOTIFICATION_CONFIG)))
-        .addMethod(
-          getListTaskPushNotificationConfigsMethod(),
-          io.grpc.stub.ServerCalls.asyncUnaryCall(
-            new MethodHandlers<
-              org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsRequest,
-              org.a2aproject.sdk.grpc.ListTaskPushNotificationConfigsResponse>(
-                service, METHODID_LIST_TASK_PUSH_NOTIFICATION_CONFIGS)))
-        .addMethod(
-          getGetExtendedAgentCardMethod(),
-          io.grpc.stub.ServerCalls.asyncUnaryCall(
-            new MethodHandlers<
-              org.a2aproject.sdk.grpc.GetExtendedAgentCardRequest,
-              org.a2aproject.sdk.grpc.AgentCard>(
-                service, METHODID_GET_EXTENDED_AGENT_CARD)))
-        .addMethod(
-          getDeleteTaskPushNotificationConfigMethod(),
-          io.grpc.stub.ServerCalls.asyncUnaryCall(
-            new MethodHandlers<
-              org.a2aproject.sdk.grpc.DeleteTaskPushNotificationConfigRequest,
-              com.google.protobuf.Empty>(
-                service, METHODID_DELETE_TASK_PUSH_NOTIFICATION_CONFIG)))
-        .build();
-  }
-
   private static abstract class A2AServiceBaseDescriptorSupplier
       implements io.grpc.protobuf.ProtoFileDescriptorSupplier, io.grpc.protobuf.ProtoServiceDescriptorSupplier {
     A2AServiceBaseDescriptorSupplier() {}
@@ -1295,9 +1135,9 @@ public final class A2AServiceGrpc {
   private static final class A2AServiceMethodDescriptorSupplier
       extends A2AServiceBaseDescriptorSupplier
       implements io.grpc.protobuf.ProtoMethodDescriptorSupplier {
-    private final java.lang.String methodName;
+    private final String methodName;
 
-    A2AServiceMethodDescriptorSupplier(java.lang.String methodName) {
+    A2AServiceMethodDescriptorSupplier(String methodName) {
       this.methodName = methodName;
     }
 
