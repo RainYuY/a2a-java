@@ -304,6 +304,9 @@ public class ClientBuilder {
      * @throws A2AClientException if no compatible transport is found or if transport configuration is missing
      */
     public Client build() throws A2AClientException {
+        if (this.agentCard == null) {
+            throw new A2AClientException("AgentCard is required but was null. Check that the agent is registered and reachable.");
+        }
         if (this.clientConfig == null) {
             this.clientConfig = new ClientConfig.Builder().build();
         }

@@ -665,8 +665,7 @@ public class RestHandler {
 
     private HTTPRestResponse createSuccessResponse(int statusCode, com.google.protobuf.Message.Builder builder) {
         try {
-            // Include default value fields to ensure empty arrays, zeros, etc. are present in JSON
-            String jsonBody = JsonFormat.printer().includingDefaultValueFields().print(builder);
+            String jsonBody = JsonFormat.printer().print(builder);
             return new HTTPRestResponse(statusCode, APPLICATION_JSON, jsonBody);
         } catch (InvalidProtocolBufferException e) {
             return createErrorResponse(new InternalError("Failed to serialize response: " + e.getMessage()));

@@ -569,7 +569,7 @@ public class JSONRPCUtils {
                 output.name("method").value(method);
             }
             if (payload != null) {
-                String resultValue = JsonFormat.printer().includingDefaultValueFields().omittingInsignificantWhitespace().print(payload);
+                String resultValue = JsonFormat.printer().omittingInsignificantWhitespace().print(payload);
                 output.name("params").jsonValue(resultValue);
             }
             output.endObject();
@@ -586,7 +586,7 @@ public class JSONRPCUtils {
             output.beginObject();
             output.name("jsonrpc").value("2.0");
             JsonUtil.writeJsonRpcId(output, requestId);
-            String resultValue = JsonFormat.printer().includingDefaultValueFields().omittingInsignificantWhitespace().print(builder);
+            String resultValue = JsonFormat.printer().omittingInsignificantWhitespace().print(builder);
             output.name("result").jsonValue(resultValue);
             output.endObject();
             return result.toString();

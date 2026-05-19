@@ -22,7 +22,7 @@ import org.jspecify.annotations.Nullable;
  * @see <a href="https://a2a-protocol.org/latest/">A2A Protocol Specification</a>
  */
 public record MessageSendParams(Message message, @Nullable MessageSendConfiguration configuration,
-                                @Nullable Map<String, Object> metadata, String tenant) {
+                                @Nullable Map<String, Object> metadata, @Nullable String tenant) {
 
     /**
      * Compact constructor for validation.
@@ -35,7 +35,7 @@ public record MessageSendParams(Message message, @Nullable MessageSendConfigurat
      */
     public MessageSendParams {
         Assert.checkNotNullParam("message", message);
-        Assert.checkNotNullParam("tenant", tenant);
+        tenant = tenant == null ? "" : tenant;
     }
 
     /**
@@ -115,7 +115,7 @@ public record MessageSendParams(Message message, @Nullable MessageSendConfigurat
          * @param tenant arbitrary key-value metadata
          * @return this builder
          */
-        public Builder tenant(String tenant) {
+        public Builder tenant(@Nullable String tenant) {
             this.tenant = tenant;
             return this;
         }
